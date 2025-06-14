@@ -1,20 +1,20 @@
-#ifndef __GLibHelpers_h__
-#define __GLibHelpers_h__
+#pragma once
 
-#include <nan.h>
+#include <napi.h>
 #include <gst/gst.h>
 
-using namespace v8;
+Napi::Object createBuffer(Napi::Env env, char *data, int length);
 
-Local<Object> createBuffer(char *data, int length);
+Napi::Value gstsample_to_napi(Napi::Env env, GstSample *sample);
+Napi::Value gstvaluearray_to_napi(Napi::Env env, const GValue *gv);
+Napi::Value gvalue_to_napi(Napi::Env env, const GValue *gv);
+void napi_to_gvalue(Napi::Env env, const Napi::Value& v, GValue *gv, GParamSpec *spec);
 
-Local<Value> gstsample_to_v8( GstSample *sample );
-Local<Value> gstvaluearray_to_v8( const GValue *gv );
-Local<Value> gvalue_to_v8( const GValue *gv );
-void v8_to_gvalue( Local<Value> v, GValue *gv, GParamSpec *spec);
+gboolean gst_structure_to_napi_value_iterate(GQuark field_id, const GValue *val, gpointer user_data);
+Napi::Object gst_structure_to_napi(Napi::Env env, const GstStructure *struc);
 
-gboolean gst_structure_to_v8_value_iterate( GQuark field_id, const GValue *val, gpointer user_data );
-Local<Object> gst_structure_to_v8( Local<Object> obj, const GstStructure *struc );
-
-
-#endif
+class GLibHelpers {
+public:
+        static Napi::Value GValueToNapiValue(Napi::Env env, const GValue* value);
+        static void NapiValueToGValue(Napi::Env env, const Napi::Value& value, GValue* gvalue);
+};

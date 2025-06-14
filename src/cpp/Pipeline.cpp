@@ -1,179 +1,258 @@
-#include <nan.h>
+#include "Pipeline.h"
+#include "GLibHelpers.h"
+#include <napi.h>
+#include <node_api.h>
+#include <uv.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "GLibHelpers.h"
 #include "GObjectWrap.h"
-#include "Pipeline.h"
 
-Nan::Persistent<Function> Pipeline::constructor;
+Napi::FunctionReference Pipeline::constructor;
 
 #define NANOS_TO_DOUBLE(nanos)(((double)nanos)/1000000000)
 //FIXME: guint64 overflow
 #define DOUBLE_TO_NANOS(secs)((guint64)(secs*1000000000))
 
-Pipeline::Pipeline(const char *launch) {
-	GError *err = NULL;
+class BusRequest {
+public:
+	BusRequest(Pipeline* pipeline, Napi::Function cb)
+		: pipeline(pipeline) {
+		callback = Napi::Reference<Napi::Function>::New(cb, 1);
+		request.data = this;
+	}
 
-	pipeline = (GstPipeline*)GST_BIN(gst_parse_launch(launch, &err));
-	if(err) {
-		fprintf(stderr,"GstError: %s\n", err->message);
-		Nan::ThrowError(err->message);
+	~BusRequest() {
+		callback.Unref();
+	}
+
+	Pipeline* pipeline;
+	uv_work_t request;
+	Napi::Reference<Napi::Function> callback;
+};
+
+void Pipeline::_doPollBus(uv_work_t* req) {
+	BusRequest* br = static_cast<BusRequest*>(req->data);
+	GstBus* bus = gst_pipeline_get_bus(GST_PIPELINE(br->pipeline->pipeline));
+	GstMessage* msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE,
+			(GstMessageType)(GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_STATE_CHANGED));
+	if (msg) {
+		gst_message_unref(msg);
+	}
+	gst_object_unref(bus);
+}
+
+void Pipeline::_polledBus(uv_work_t* req, int status) {
+	BusRequest* br = static_cast<BusRequest*>(req->data);
+	Napi::Env env = br->callback.Env();
+	Napi::HandleScope scope(env);
+
+	br->callback.Value().Call({});
+	delete br;
+}
+
+Napi::Object Pipeline::Init(Napi::Env env, Napi::Object exports) {
+	Napi::Function func = DefineClass(env, "Pipeline", {
+		InstanceMethod("play", &Pipeline::Play),
+		InstanceMethod("pause", &Pipeline::Pause),
+		InstanceMethod("stop", &Pipeline::Stop),
+		InstanceMethod("seek", &Pipeline::Seek),
+		InstanceMethod("queryPosition", &Pipeline::QueryPosition),
+		InstanceMethod("queryDuration", &Pipeline::QueryDuration),
+		InstanceMethod("sendEOS", &Pipeline::SendEOS),
+		InstanceMethod("forceKeyUnit", &Pipeline::ForceKeyUnit),
+		InstanceMethod("findChild", &Pipeline::FindChild),
+		InstanceMethod("setPad", &Pipeline::SetPad),
+		InstanceMethod("getPad", &Pipeline::GetPad),
+		InstanceMethod("pollBus", &Pipeline::PollBus),
+		InstanceAccessor("autoFlushBus", &Pipeline::GetAutoFlushBus, &Pipeline::SetAutoFlushBus),
+		InstanceAccessor("delay", &Pipeline::GetDelay, &Pipeline::SetDelay),
+		InstanceAccessor("latency", &Pipeline::GetLatency, &Pipeline::SetLatency)
+	});
+
+	constructor = Napi::Persistent(func);
+	constructor.SuppressDestruct();
+
+	exports.Set("Pipeline", func);
+	return exports;
+}
+
+Pipeline::Pipeline(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Pipeline>(info) {
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (info.Length() < 1) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return;
+	}
+
+	if (!info[0].IsString()) {
+		Napi::TypeError::New(env, "First argument must be a string").ThrowAsJavaScriptException();
+		return;
+	}
+
+	std::string pipeline_str = info[0].As<Napi::String>();
+	GError* error = nullptr;
+	pipeline = GST_PIPELINE(gst_parse_launch(pipeline_str.c_str(), &error));
+	if (error) {
+		Napi::Error::New(env, error->message).ThrowAsJavaScriptException();
+		g_error_free(error);
+		return;
+	}
+
+	bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+	auto_flush_bus = true;
+	delay = 0;
+	latency = 0;
+}
+
+Pipeline::~Pipeline() {
+	if (bus) {
+		gst_object_unref(bus);
+	}
+	if (pipeline) {
+		gst_object_unref(pipeline);
 	}
 }
 
-Pipeline::Pipeline(GstPipeline* pipeline) {
-	this->pipeline = pipeline;
+Napi::Object Pipeline::NewInstance(const Napi::CallbackInfo& info, GstPipeline* pipeline) {
+	Napi::Env env = info.Env();
+	Napi::EscapableHandleScope scope(env);
+
+	Napi::Object obj = constructor.New({});
+	Pipeline* pipeline_obj = Napi::ObjectWrap<Pipeline>::Unwrap(obj);
+	pipeline_obj->pipeline = pipeline;
+	pipeline_obj->bus = gst_pipeline_get_bus(pipeline);
+	pipeline_obj->auto_flush_bus = true;
+	pipeline_obj->delay = 0;
+	pipeline_obj->latency = 0;
+
+	return scope.Escape(obj).As<Napi::Object>();
 }
 
-void Pipeline::Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE exports) {
-	Nan::HandleScope scope;
-
-	Local<FunctionTemplate> ctor = Nan::New<FunctionTemplate>(Pipeline::New);
-	ctor->InstanceTemplate()->SetInternalFieldCount(1);
-	ctor->SetClassName(Nan::New("Pipeline").ToLocalChecked());
-
-	Local<ObjectTemplate> proto = ctor->PrototypeTemplate();
-	// Prototype
-	Nan::SetPrototypeMethod(ctor, "play", Play);
-	Nan::SetPrototypeMethod(ctor, "pause", Pause);
-	Nan::SetPrototypeMethod(ctor, "stop", Stop);
-	Nan::SetPrototypeMethod(ctor, "seek", Seek);
-	Nan::SetPrototypeMethod(ctor, "queryPosition", QueryPosition);
-	Nan::SetPrototypeMethod(ctor, "queryDuration", QueryDuration);
-	Nan::SetPrototypeMethod(ctor, "sendEOS", SendEOS);
-	Nan::SetPrototypeMethod(ctor, "forceKeyUnit", ForceKeyUnit);
-	Nan::SetPrototypeMethod(ctor, "findChild", FindChild);
-	Nan::SetPrototypeMethod(ctor, "setPad", SetPad);
-	Nan::SetPrototypeMethod(ctor, "getPad", GetPad);
-	Nan::SetPrototypeMethod(ctor, "pollBus", PollBus);
-
-	Nan::SetAccessor(proto, Nan::New("auto-flush-bus").ToLocalChecked(), GetAutoFlushBus, SetAutoFlushBus);
-	Nan::SetAccessor(proto, Nan::New("delay").ToLocalChecked(), GetDelay, SetDelay);
-	Nan::SetAccessor(proto, Nan::New("latency").ToLocalChecked(), GetLatency, SetLatency);
-
-	constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
-	Nan::Set(exports, Nan::New("Pipeline").ToLocalChecked(), Nan::GetFunction(ctor).ToLocalChecked());
+Napi::Value Pipeline::Play(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_element_set_state(GST_ELEMENT(obj->pipeline), GST_STATE_PLAYING);
+	return env.Undefined();
 }
 
-NAN_METHOD(Pipeline::New) {
-	if (!info.IsConstructCall())
-		return Nan::ThrowTypeError("Class constructors cannot be invoked without 'new'");
-
-	Nan::Utf8String launch(info[0]);
-
-	Pipeline* obj = new Pipeline(*launch);
-	obj->Wrap(info.This());
-	info.GetReturnValue().Set(info.This());
+Napi::Value Pipeline::Pause(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_element_set_state(GST_ELEMENT(obj->pipeline), GST_STATE_PAUSED);
+	return env.Undefined();
 }
 
-void Pipeline::play() {
-	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING);
-}
-
-NAN_METHOD(Pipeline::Play) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	obj->play();
-}
-
-void Pipeline::stop() {
-	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_NULL);
-}
-
-NAN_METHOD(Pipeline::Stop) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	obj->stop();
+Napi::Value Pipeline::Stop(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_element_set_state(GST_ELEMENT(obj->pipeline), GST_STATE_NULL);
+	return env.Undefined();
 }
 
 void Pipeline::sendEOS() {
 	gst_element_send_event(GST_ELEMENT(pipeline), gst_event_new_eos());
 }
 
-NAN_METHOD(Pipeline::SendEOS) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	obj->sendEOS();
-}
-
-void Pipeline::pause() {
-	gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PAUSED);
-}
-
-NAN_METHOD(Pipeline::Pause) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	obj->pause();
+Napi::Value Pipeline::SendEOS(const Napi::CallbackInfo& info) {
+	sendEOS();
+	return info.Env().Undefined();
 }
 
 gboolean Pipeline::seek(gint64 time_seconds, GstSeekFlags flags) {
-  return gst_element_seek (GST_ELEMENT(pipeline), 1.0, GST_FORMAT_TIME, flags,
-                         GST_SEEK_TYPE_SET, time_seconds,
-                         GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+	return gst_element_seek(GST_ELEMENT(pipeline), 1.0, GST_FORMAT_TIME, flags,
+						  GST_SEEK_TYPE_SET, time_seconds,
+						  GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 }
 
-NAN_METHOD(Pipeline::Seek) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	gint64 t(Nan::To<int64_t>(info[0]).ToChecked());
-	t *= GST_SECOND;
-	GstSeekFlags flags((GstSeekFlags)Nan::To<Int32>(info[1]).ToLocalChecked()->Value());
+Napi::Value Pipeline::Seek(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 2) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
 
-	info.GetReturnValue().Set(Nan::New<Boolean>(obj->seek(t,flags)));
+	gint64 t = info[0].As<Napi::Number>().Int64Value() * GST_SECOND;
+	GstSeekFlags flags = (GstSeekFlags)info[1].As<Napi::Number>().Int32Value();
+
+	return Napi::Boolean::New(env, seek(t, flags));
 }
 
 gint64 Pipeline::queryPosition() {
-  gint64 pos;
-  gst_element_query_position (GST_ELEMENT(pipeline), GST_FORMAT_TIME, &pos);
-  return pos;
+	gint64 pos;
+	gst_element_query_position(GST_ELEMENT(pipeline), GST_FORMAT_TIME, &pos);
+	return pos;
 }
 
-NAN_METHOD(Pipeline::QueryPosition) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	gint64 t = obj->queryPosition();
-	double r = t==-1 ? -1 : (double)t/GST_SECOND;
-
-	info.GetReturnValue().Set(Nan::New<Number>(r));
+Napi::Value Pipeline::QueryPosition(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	gint64 t = queryPosition();
+	double r = t == -1 ? -1 : (double)t/GST_SECOND;
+	return Napi::Number::New(env, r);
 }
 
 gint64 Pipeline::queryDuration() {
-  gint64 dur;
-  gst_element_query_duration (GST_ELEMENT(pipeline), GST_FORMAT_TIME, &dur);
-  return dur;
+	gint64 dur;
+	gst_element_query_duration(GST_ELEMENT(pipeline), GST_FORMAT_TIME, &dur);
+	return dur;
 }
 
-NAN_METHOD(Pipeline::QueryDuration) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	gint64 t = obj->queryDuration();
-	double r = t==-1 ? -1 : (double)t/GST_SECOND;
-
-	info.GetReturnValue().Set(Nan::New<Number>(r));
+Napi::Value Pipeline::QueryDuration(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	gint64 t = queryDuration();
+	double r = t == -1 ? -1 : (double)t/GST_SECOND;
+	return Napi::Number::New(env, r);
 }
 
 void Pipeline::forceKeyUnit(GObject *sink, int cnt) {
 	GstPad *sinkpad = gst_element_get_static_pad(GST_ELEMENT(sink), "sink");
-	gst_pad_push_event(sinkpad,(GstEvent*) gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, TRUE, cnt));
+	gst_pad_push_event(sinkpad, (GstEvent*)gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, TRUE, cnt));
 }
 
-NAN_METHOD(Pipeline::ForceKeyUnit) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	Nan::Utf8String name(info[0]);
-	GObject *o = obj->findChild(*name);
-	int cnt(Nan::To<Int32>(info[1]).ToLocalChecked()->Value());
-	obj->forceKeyUnit(o, cnt);
-	info.GetReturnValue().Set(Nan::True());
+Napi::Value Pipeline::ForceKeyUnit(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 2) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	std::string name = info[0].As<Napi::String>().Utf8Value();
+	int cnt = info[1].As<Napi::Number>().Int32Value();
+	
+	GObject *o = findChild(name.c_str());
+	if (!o) {
+		Napi::Error::New(env, "Element not found").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	forceKeyUnit(o, cnt);
+	return Napi::Boolean::New(env, true);
 }
 
-GObject * Pipeline::findChild(const char *name) {
+GObject *Pipeline::findChild(const char *name) {
 	GstElement *e = gst_bin_get_by_name(GST_BIN(pipeline), name);
 	return G_OBJECT(e);
 }
 
-NAN_METHOD(Pipeline::FindChild) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	Nan::Utf8String name(info[0]);
-	GObject *o = obj->findChild(*name);
-	if(o)
-		info.GetReturnValue().Set(GObjectWrap::NewInstance(info, o));
-	else
-		info.GetReturnValue().Set(Nan::Undefined());
+Napi::Value Pipeline::FindChild(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 1) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	std::string name = info[0].As<Napi::String>().Utf8Value();
+	GObject *o = findChild(name.c_str());
+	
+	if (o) {
+		return GObjectWrap::NewInstance(info, o);
+	}
+	return env.Null();
 }
 
 void Pipeline::setPad(GObject *elem, const char *attribute, const char *padName) {
@@ -184,158 +263,107 @@ void Pipeline::setPad(GObject *elem, const char *attribute, const char *padName)
 	g_object_set(elem, attribute, pad, NULL);
 }
 
-NAN_METHOD(Pipeline::SetPad) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	Nan::Utf8String name(info[0]);
-	GObject *o = obj->findChild(*name);
-	if(!o) {
-		return;
+Napi::Value Pipeline::SetPad(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 3) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
 	}
 
-	Nan::Utf8String attribute(info[1]);
-	Nan::Utf8String padName(info[2]);
-	obj->setPad(o, *attribute, *padName);
+	std::string name = info[0].As<Napi::String>().Utf8Value();
+	std::string attribute = info[1].As<Napi::String>().Utf8Value();
+	std::string padName = info[2].As<Napi::String>().Utf8Value();
+
+	GObject *o = findChild(name.c_str());
+	if (!o) {
+		Napi::Error::New(env, "Element not found").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	setPad(o, attribute.c_str(), padName.c_str());
+	return env.Undefined();
 }
 
-GObject * Pipeline::getPad(GObject* elem, const char *padName ) {
+GObject *Pipeline::getPad(GObject* elem, const char *padName ) {
 	GstPad *pad = gst_element_get_static_pad(GST_ELEMENT(elem), padName);
 	return G_OBJECT(pad);
 }
 
-NAN_METHOD(Pipeline::GetPad) {
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	Nan::Utf8String name(info[0]);
-	GObject *o = obj->findChild(*name);
+Napi::Value Pipeline::GetPad(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	
+	if (info.Length() < 2) {
+		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	std::string name = info[0].As<Napi::String>().Utf8Value();
+	GObject *o = findChild(name.c_str());
 	if (!o) {
-		return;
+		return env.Null();
 	}
 
-	Nan::Utf8String padName(info[1]);
-	GObject *pad = obj->getPad(o, *padName);
+	std::string padName = info[1].As<Napi::String>().Utf8Value();
+	GObject *pad = getPad(o, padName.c_str());
 	if(pad) {
-		info.GetReturnValue().Set(GObjectWrap::NewInstance(info, pad));
+		return GObjectWrap::NewInstance(info, pad);
 	} else {
-		info.GetReturnValue().Set(Nan::Undefined());
+		return env.Null();
 	}
 }
 
+Napi::Value Pipeline::PollBus(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
 
-class BusRequest : public Nan::AsyncResource {
-	public:
-		BusRequest(Pipeline *obj_, Local<Function> cb)
-			: AsyncResource("node-gst-superficial.BusRequest")
-			, obj(obj_)
-			{
-				callback.Reset(cb);;
-				request.data = this;
-			}
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
 
-		~BusRequest() {
-			callback.Reset();
-		}
-
-	uv_work_t request;
-	Nan::Persistent<Function> callback;
-	Pipeline *obj;
-	GstMessage *msg;
-};
-
-void Pipeline::_doPollBus(uv_work_t *req) {
-	BusRequest *br = static_cast<BusRequest*>(req->data);
-	GstBus *bus = gst_element_get_bus(GST_ELEMENT(br->obj->pipeline));
-	if(!bus) return;
-	br->msg = gst_bus_timed_pop(bus, GST_CLOCK_TIME_NONE);
-}
-
-void Pipeline::_polledBus(uv_work_t *req, int n) {
-	BusRequest *br = static_cast<BusRequest*>(req->data);
-
-	if(br->msg) {
-		Nan::HandleScope scope;
-		Local<Object> m = Nan::New<Object>();
-		Nan::Set(m, Nan::New("type").ToLocalChecked(), Nan::New(GST_MESSAGE_TYPE_NAME(br->msg)).ToLocalChecked());
-
-		const GstStructure *structure = (GstStructure*)gst_message_get_structure(br->msg);
-		if(structure)
-			gst_structure_to_v8(m, structure);
-
-		GstObject *src = br->msg->src;
-		Local<String> v = Nan::New<String>((const char *)src->name).ToLocalChecked();
-		Nan::Set(m, Nan::New("_src_element_name").ToLocalChecked(), v);
-
-		if(GST_MESSAGE_TYPE(br->msg) == GST_MESSAGE_ERROR) {
-			GError *err = NULL;
-			gchar *name = gst_object_get_path_string(br->msg->src);
-			Nan::Set(m,Nan::New("name").ToLocalChecked(), Nan::New(name).ToLocalChecked());
-			gst_message_parse_error(br->msg, &err, NULL);
-			Nan::Set(m,Nan::New("message").ToLocalChecked(), Nan::New(err->message).ToLocalChecked());
-		}
-
-		Local<Value> argv[1] = { m };
-
-		v8::Local<v8::Function> callback = Nan::New(br->callback);
-//		br->callback.Call(1, argv);
-		v8::Local<v8::Object> target = Nan::New<v8::Object>();
-		br->runInAsyncScope(target, callback, 1, argv);
-
-		gst_message_unref(br->msg);
-	}
-	if(GST_STATE(br->obj->pipeline) != GST_STATE_NULL)
-		uv_queue_work(Nan::GetCurrentEventLoop(), &br->request, _doPollBus, _polledBus);
-}
-
-NAN_METHOD(Pipeline::PollBus) {
-	Nan::EscapableHandleScope scope;
-	Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-
-	if(info.Length() == 0 || !info[0]->IsFunction()) {
-		Nan::ThrowError("Callback is required and must be a Function.");
-		scope.Escape(Nan::Undefined());
-		return;
+	if (info.Length() == 0 || !info[0].IsFunction()) {
+		Napi::TypeError::New(env, "Callback function required").ThrowAsJavaScriptException();
+		return env.Undefined();
 	}
 
-	Local<Function> callback = Local<Function>::Cast(info[0]);
+	BusRequest* br = new BusRequest(obj, info[0].As<Napi::Function>());
+	uv_queue_work(uv_default_loop(), &br->request, _doPollBus, _polledBus);
 
-	BusRequest * br = new BusRequest(obj,callback);
-	obj->Ref();
-	uv_queue_work(Nan::GetCurrentEventLoop(), &br->request, _doPollBus, _polledBus);
-
-	scope.Escape(Nan::Undefined());
+	return env.Undefined();
 }
 
-
-NAN_GETTER(Pipeline::GetAutoFlushBus) {
-	Pipeline *obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	info.GetReturnValue().Set(Nan::New<Boolean>(gst_pipeline_get_auto_flush_bus(obj->pipeline)));
+Napi::Value Pipeline::GetAutoFlushBus(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	return Napi::Boolean::New(env, gst_pipeline_get_auto_flush_bus(obj->pipeline));
 }
 
-NAN_SETTER(Pipeline::SetAutoFlushBus) {
-	if(value->IsBoolean()) {
-		Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-		gst_pipeline_set_auto_flush_bus(obj->pipeline, Nan::To<Boolean>(value).ToLocalChecked()->Value());
-	}
+void Pipeline::SetAutoFlushBus(const Napi::CallbackInfo& info, const Napi::Value& value) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_pipeline_set_auto_flush_bus(obj->pipeline, value.As<Napi::Boolean>());
 }
 
-NAN_GETTER(Pipeline::GetDelay) {
-	Pipeline *obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	double secs = NANOS_TO_DOUBLE(gst_pipeline_get_delay(obj->pipeline));
-	info.GetReturnValue().Set(Nan::New<Number>(secs));
+Napi::Value Pipeline::GetDelay(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	GstClockTime delay = gst_pipeline_get_delay(obj->pipeline);
+	return Napi::Number::New(env, GST_TIME_AS_SECONDS(delay));
 }
 
-NAN_SETTER(Pipeline::SetDelay) {
-	if(value->IsNumber()) {
-		Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-		gst_pipeline_set_delay(obj->pipeline, DOUBLE_TO_NANOS(Nan::To<Number>(value).ToLocalChecked()->Value()));
-	}
+void Pipeline::SetDelay(const Napi::CallbackInfo& info, const Napi::Value& value) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_pipeline_set_delay(obj->pipeline, GST_SECOND * value.As<Napi::Number>().DoubleValue());
 }
-NAN_GETTER(Pipeline::GetLatency) {
-	Pipeline *obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-	double secs = NANOS_TO_DOUBLE(gst_pipeline_get_latency(obj->pipeline));
-	info.GetReturnValue().Set(Nan::New<Number>(secs));
+
+Napi::Value Pipeline::GetLatency(const Napi::CallbackInfo& info) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	GstClockTime latency = gst_pipeline_get_latency(obj->pipeline);
+	return Napi::Number::New(env, GST_TIME_AS_SECONDS(latency));
 }
-NAN_SETTER(Pipeline::SetLatency) {
-	if(value->IsNumber()) {
-		Pipeline* obj = Nan::ObjectWrap::Unwrap<Pipeline>(info.This());
-		gst_pipeline_set_latency(obj->pipeline, DOUBLE_TO_NANOS(Nan::To<Number>(value).ToLocalChecked()->Value()));
-	}
+
+void Pipeline::SetLatency(const Napi::CallbackInfo& info, const Napi::Value& value) {
+	Napi::Env env = info.Env();
+	Pipeline* obj = Napi::ObjectWrap<Pipeline>::Unwrap(info.This().As<Napi::Object>());
+	gst_pipeline_set_latency(obj->pipeline, GST_SECOND * value.As<Napi::Number>().DoubleValue());
 }

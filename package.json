@@ -36,7 +36,6 @@
   "license": "ISC",
   "description": "A template for creating Node.js native addons with C++ and TypeScript",
   "dependencies": {
-    "nan": "2.22.2",
     "node-addon-api": "8.3.1"
   },
   "devDependencies": {

@@ -1,39 +1,31 @@
-#ifndef __GObjectWrap_h__
-#define __GObjectWrap_h__
+#pragma once
 
-#include <nan.h>
+#include <napi.h>
 #include <gst/gst.h>
 
 #include "GLibHelpers.h"
 
-class GObjectWrap : public Nan::ObjectWrap {
+class GObjectWrap : public Napi::ObjectWrap<GObjectWrap> {
 	public:
-		static void Init();
-		static Local<Value> NewInstance( const Nan::FunctionCallbackInfo<Value>& info, GObject *obj );
+		static Napi::Object Init(Napi::Env env, Napi::Object exports);
+		static Napi::Object NewInstance(const Napi::CallbackInfo& info, GObject* obj);
+		GObjectWrap(const Napi::CallbackInfo& info);
+		~GObjectWrap();
 
-		void set( const char *name, const Local<Value> value );
+		void set(const char *name, const Napi::Value& value);
 
 		void play();
 		void pause();
 		void stop();
 
 	private:
-		GObjectWrap() {}
-		~GObjectWrap() {}
+		static Napi::FunctionReference constructor;
 
-		GObject *obj;
+		Napi::Value GetProperty(const Napi::CallbackInfo& info);
+		Napi::Value SetProperty(const Napi::CallbackInfo& info);
+		Napi::Value Pull(const Napi::CallbackInfo& info);
+		Napi::Value GstAppSinkPull(const Napi::CallbackInfo& info);
+		Napi::Value GstAppSrcPush(const Napi::CallbackInfo& info);
 
-		static Nan::Persistent<Function> constructor;
-		static NAN_METHOD(New);
-		static NAN_SETTER(SetProperty);
-		static NAN_GETTER(GetProperty);
-
-/*
-		static void _doPullBuffer( uv_work_t *req );
-		static void _pulledBuffer( uv_work_t *req, int );
-		*/
-		static NAN_METHOD(GstAppSinkPull);
-        static NAN_METHOD(GstAppSrcPush);
+		GObject* obj;
 };
-
-#endif

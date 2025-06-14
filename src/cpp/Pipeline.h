@@ -1,14 +1,17 @@
-#ifndef __Pipeline_h__
-#define __Pipeline_h__
+#pragma once
 
-#include <nan.h>
+#include <napi.h>
 #include <gst/gst.h>
+#include <uv.h>
 
 #include "GLibHelpers.h"
 
-class Pipeline : public Nan::ObjectWrap {
+class Pipeline : public Napi::ObjectWrap<Pipeline> {
 	public:
-		static void Init( Local<Object> exports );
+		static Napi::Object Init(Napi::Env env, Napi::Object exports);
+		static Napi::Object NewInstance(const Napi::CallbackInfo& info, GstPipeline* pipeline);
+		Pipeline(const Napi::CallbackInfo& info);
+		~Pipeline();
 
 		void play();
 		void pause();
@@ -20,44 +23,40 @@ class Pipeline : public Nan::ObjectWrap {
 		void forceKeyUnit(GObject* sink, int cnt);
 
 		GObject *findChild( const char *name );
-		Local<Value> pollBus();
+		Napi::Value pollBus();
 
 		void setPad( GObject* elem, const char *attribute, const char *padName );
 		GObject *getPad( GObject* elem, const char *padName );
 
 	private:
-		Pipeline(const char *launch);
-		Pipeline(GstPipeline *pipeline);
-		~Pipeline() {}
+		static Napi::FunctionReference constructor;
 
-		static Nan::Persistent<Function> constructor;
+		Napi::Value Play(const Napi::CallbackInfo& info);
+		Napi::Value Pause(const Napi::CallbackInfo& info);
+		Napi::Value Stop(const Napi::CallbackInfo& info);
+		Napi::Value Seek(const Napi::CallbackInfo& info);
+		Napi::Value QueryPosition(const Napi::CallbackInfo& info);
+		Napi::Value QueryDuration(const Napi::CallbackInfo& info);
+		Napi::Value SendEOS(const Napi::CallbackInfo& info);
+		Napi::Value ForceKeyUnit(const Napi::CallbackInfo& info);
+		Napi::Value FindChild(const Napi::CallbackInfo& info);
+		Napi::Value SetPad(const Napi::CallbackInfo& info);
+		Napi::Value GetPad(const Napi::CallbackInfo& info);
+		Napi::Value PollBus(const Napi::CallbackInfo& info);
 
-		GstPipeline *pipeline;
-
-		static NAN_METHOD(New);
-		static NAN_METHOD(Play);
-		static NAN_METHOD(Pause);
-		static NAN_METHOD(Stop);
-		static NAN_METHOD(Seek);
-		static NAN_METHOD(QueryPosition);
-		static NAN_METHOD(QueryDuration);
-		static NAN_METHOD(SendEOS);
-		static NAN_METHOD(ForceKeyUnit);
-		static NAN_METHOD(FindChild);
-		static NAN_METHOD(SetPad);
-		static NAN_METHOD(GetPad);
+		Napi::Value GetAutoFlushBus(const Napi::CallbackInfo& info);
+		void SetAutoFlushBus(const Napi::CallbackInfo& info, const Napi::Value& value);
+		Napi::Value GetDelay(const Napi::CallbackInfo& info);
+		void SetDelay(const Napi::CallbackInfo& info, const Napi::Value& value);
+		Napi::Value GetLatency(const Napi::CallbackInfo& info);
+		void SetLatency(const Napi::CallbackInfo& info, const Napi::Value& value);
 
 		static void _doPollBus( uv_work_t *req );
 		static void _polledBus( uv_work_t *req, int );
-		static NAN_METHOD(PollBus);
 
-		static NAN_GETTER(GetAutoFlushBus);
-		static NAN_SETTER(SetAutoFlushBus);
-		static NAN_GETTER(GetDelay);
-		static NAN_SETTER(SetDelay);
-		static NAN_GETTER(GetLatency);
-		static NAN_SETTER(SetLatency);
-
+		GstPipeline *pipeline;
+		GstBus *bus;
+		bool auto_flush_bus;
+		GstClockTime delay;
+		GstClockTime latency;
 };
-
-#endif
