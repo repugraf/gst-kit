@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
 pkg_check_modules(GSTREAMER_APP REQUIRED gstreamer-app-1.0)
+pkg_check_modules(GSTREAMER_RTP REQUIRED gstreamer-rtp-1.0)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GOBJECT REQUIRED gobject-2.0)
 
@@ -31,6 +32,7 @@ include_directories(
     ${NODE_ADDON_API_DIR}
     ${GSTREAMER_INCLUDE_DIRS}
     ${GSTREAMER_APP_INCLUDE_DIRS}
+    ${GSTREAMER_RTP_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${GOBJECT_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp
@@ -43,9 +45,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 # Add library target
 add_library(native_addon SHARED
     src/cpp/addon.cpp
-    src/cpp/Pipeline.cpp
-    src/cpp/GObjectWrap.cpp
-    src/cpp/GLibHelpers.cpp
+    src/cpp/pipeline.cpp
 )
 
 # Set output name and properties
@@ -63,6 +63,7 @@ target_link_libraries(native_addon
     ${CMAKE_JS_LIB}
     ${GSTREAMER_LIBRARIES}
     ${GSTREAMER_APP_LIBRARIES}
+    ${GSTREAMER_RTP_LIBRARIES}
     ${GLIB_LIBRARIES}
     ${GOBJECT_LIBRARIES}
 )

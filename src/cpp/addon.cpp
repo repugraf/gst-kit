@@ -1,18 +1,9 @@
 #include <napi.h>
-#include "Pipeline.h"
-#include "GObjectWrap.h"
+#include "pipeline.hpp"
 
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    // Initialize GStreamer
-    gst_init(nullptr, nullptr);
-
-    // Register the Pipeline class
+Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
     Pipeline::Init(env, exports);
-    
-    // Register the GObjectWrap class
-    GObjectWrap::Init(env, exports);
-
     return exports;
 }
 
-NODE_API_MODULE(native_addon, Init)
+NODE_API_MODULE(NODE_GYP_MODULE_NAME, InitAll)
