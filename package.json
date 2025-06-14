@@ -1,0 +1,58 @@
+{
+  "name": "gstreamer-ts",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf build dist",
+    "build:native": "cmake-js compile",
+    "build:ts": "rollup -c rollup.config.mjs",
+    "build": "npm run clean && npm run build:native && npm run build:ts",
+    "test:node": "node modules/common.cjs && node modules/esm.mjs",
+    "test:bun": "bun modules/common.cjs && bun modules/esm.mjs",
+    "test:deno": "deno run -A modules/esm.mjs",
+    "test:unit": "vitest --no-watch",
+    "test": "npm run test:node && npm run test:unit",
+    "postinstall": "node scripts/ensure-native-addon.js",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
+  },
+  "keywords": [
+    "node",
+    "native",
+    "addon",
+    "cpp",
+    "typescript",
+    "template"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "A template for creating Node.js native addons with C++ and TypeScript",
+  "dependencies": {
+    "nan": "2.22.2",
+    "node-addon-api": "8.3.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "28.0.3",
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@rollup/plugin-typescript": "12.1.2",
+    "@types/node": "24.0.1",
+    "@typescript-eslint/eslint-plugin": "8.34.0",
+    "@typescript-eslint/parser": "8.34.0",
+    "cmake-js": "7.3.1",
+    "eslint": "9.28.0",
+    "prettier": "3.5.3",
+    "rollup": "4.43.0",
+    "rollup-plugin-dts": "6.2.1",
+    "tslib": "2.8.1",
+    "typescript": "5.8.3",
+    "vitest": "3.2.3"
+  }
+}
