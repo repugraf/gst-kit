@@ -12,7 +12,7 @@ By participating in this project, you agree to abide by our Code of Conduct.
 1. Clone your fork:
 
 ```bash
-git clone https://github.com/your-username/gstreamer-ts.git
+git clone https://github.com/Repugraf/gst-kit.git
 ```
 
 1. Install dependencies:
