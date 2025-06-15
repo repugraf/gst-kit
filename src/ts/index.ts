@@ -9,18 +9,22 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
+type ElementBase = {
+  getElementProperty: (key: string) => any;
+};
+
 type Element = {
   readonly type: "element";
-};
+} & ElementBase;
 
 type AppSinkElement = {
   readonly type: "app-sink-element";
   pull(timeout?: number): Promise<Buffer | null>;
-};
+} & ElementBase;
 
 type AppSrcElement = {
   readonly type: "app-src-element";
-};
+} & ElementBase;
 
 interface Pipeline {
   play(): void;
