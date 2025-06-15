@@ -46,6 +46,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 add_library(native_addon SHARED
     src/cpp/addon.cpp
     src/cpp/pipeline.cpp
+    src/cpp/element.cpp
 )
 
 # Set output name and properties

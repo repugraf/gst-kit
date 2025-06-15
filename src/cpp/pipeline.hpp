@@ -9,6 +9,7 @@
 class Pipeline : public Napi::ObjectWrap<Pipeline> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
+
   Pipeline(const Napi::CallbackInfo &info);
 
   Napi::Value play(const Napi::CallbackInfo &info);
@@ -17,6 +18,6 @@ public:
   Napi::Value get_element_by_name(const Napi::CallbackInfo &info);
 
 private:
-  std::string _pipeline_string;
-  std::unique_ptr<GstPipeline, decltype(&gst_object_unref)> _pipeline;
+  std::string pipeline_string;
+  std::unique_ptr<GstPipeline, decltype(&gst_object_unref)> pipeline;
 };
