@@ -1,13 +1,11 @@
 #include "pipeline.hpp"
 #include "element.hpp"
-#include "constructor_registry.hpp"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
 Napi::Object Pipeline::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(env, "Pipeline", {});
   exports.Set("Pipeline", func);
-  ConstructorRegistry::RegisterConstructor(env, "Pipeline", func);
   return exports;
 }
 

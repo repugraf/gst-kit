@@ -4,9 +4,6 @@
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
   Pipeline::Init(env, exports);
-  Element::Init(env, exports);
-  AppSinkElement::Init(env, exports);
-  AppSrcElement::Init(env, exports);
   return exports;
 }
 

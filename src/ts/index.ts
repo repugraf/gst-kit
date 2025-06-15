@@ -9,12 +9,18 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
-interface Element {}
+type Element = {
+  readonly type: "element";
+};
 
-interface AppSinkElement extends Element {
+type AppSinkElement = {
+  readonly type: "app-sink-element";
   pull(timeout?: number): Promise<Buffer | null>;
-}
-interface AppSrcElement extends Element {}
+};
+
+type AppSrcElement = {
+  readonly type: "app-src-element";
+};
 
 interface Pipeline {
   play(): void;
@@ -26,9 +32,6 @@ interface Pipeline {
 // Define the interface for the native addon
 interface NativeAddon {
   Pipeline: new (pipeline: string) => Pipeline;
-  Element: new () => Element;
-  AppSinkElement: new () => AppSinkElement;
-  AppSrcElement: new () => AppSrcElement;
 }
 
 // Create require function for ESM
@@ -37,18 +40,8 @@ const require = createRequire(import.meta.url);
 // Load the native addon
 const nativeAddon: NativeAddon = require(join(projectRoot, "build/Release/native_addon.node"));
 
-const {
-  Pipeline: PipelineClass,
-  Element: ElementClass,
-  AppSinkElement: AppSinkElementClass,
-  AppSrcElement: AppSrcElementClass,
-} = nativeAddon;
+const { Pipeline: PipelineClass } = nativeAddon;
 
-export {
-  PipelineClass as Pipeline,
-  ElementClass as Element,
-  AppSinkElementClass as AppSinkElement,
-  AppSrcElementClass as AppSrcElementClass,
-};
+export { PipelineClass as Pipeline };
 
 export default nativeAddon;

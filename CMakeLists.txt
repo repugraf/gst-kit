@@ -47,7 +47,6 @@ add_library(native_addon SHARED
     src/cpp/addon.cpp
     src/cpp/pipeline.cpp
     src/cpp/element.cpp
-    src/cpp/constructor_registry.cpp
 )
 
 # Set output name and properties
