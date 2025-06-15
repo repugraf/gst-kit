@@ -11,11 +11,13 @@ const projectRoot = join(__dirname, "../../");
 
 interface Element {}
 
-interface AppSinkElement extends Element {}
+interface AppSinkElement extends Element {
+  pull(timeout?: number): Promise<Buffer | null>;
+}
 interface AppSrcElement extends Element {}
 
 interface Pipeline {
-  start(): void;
+  play(): void;
   stop(): void;
   playing(): boolean;
   getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;

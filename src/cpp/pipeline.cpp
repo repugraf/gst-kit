@@ -1,11 +1,13 @@
 #include "pipeline.hpp"
 #include "element.hpp"
+#include "constructor_registry.hpp"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
 Napi::Object Pipeline::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(env, "Pipeline", {});
   exports.Set("Pipeline", func);
+  ConstructorRegistry::RegisterConstructor(env, "Pipeline", func);
   return exports;
 }
 
@@ -33,22 +35,23 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
   Napi::Object thisObj = info.This().As<Napi::Object>();
 
   // Create bound methods
-  auto play_method =
-    Napi::Function::New(env, [this](const Napi::CallbackInfo &info) -> Napi::Value {
-      return this->play(info);
-    });
-  auto stop_method =
-    Napi::Function::New(env, [this](const Napi::CallbackInfo &info) -> Napi::Value {
-      return this->stop(info);
-    });
-  auto playing_method =
-    Napi::Function::New(env, [this](const Napi::CallbackInfo &info) -> Napi::Value {
-      return this->playing(info);
-    });
-  auto get_element_by_name_method =
-    Napi::Function::New(env, [this](const Napi::CallbackInfo &info) -> Napi::Value {
+  auto play_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->play(info); }, "play"
+  );
+  auto stop_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->stop(info); }, "stop"
+  );
+  auto playing_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->playing(info); },
+    "playing"
+  );
+  auto get_element_by_name_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value {
       return this->get_element_by_name(info);
-    });
+    },
+    "getElementByName"
+  );
 
   thisObj.DefineProperties(
     {Napi::PropertyDescriptor::Value("play", play_method, napi_enumerable),
@@ -76,8 +79,8 @@ Napi::Value Pipeline::get_element_by_name(const Napi::CallbackInfo &info) {
 
   if (e == nullptr) return info.Env().Null();
 
-  // Use the Element factory to create the appropriate wrapper
-  return Element::CreateWrapper(info.Env(), e);
+  // Use the stored constructors to create the appropriate element
+  return Element::CreateFromGstElement(info.Env(), e);
 }
 
 Napi::Value Pipeline::playing(const Napi::CallbackInfo &info) {

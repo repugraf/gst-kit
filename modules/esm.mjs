@@ -1,4 +1,5 @@
 import assert from "node:assert";
-import {Pipeline} from "../dist/esm/index.mjs";
+import gst from "../dist/esm/index.mjs";
 
-assert(!!Pipeline, "ESM: Pipeline is not defined");
+assert(!!gst, "ESM: Module is not defined");
+assert(gst.Pipeline, "ESM: Pipeline is not defined");

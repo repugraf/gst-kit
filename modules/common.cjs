@@ -1,4 +1,5 @@
 const assert = require("node:assert");
-const {Pipeline} = require("../dist/cjs/index.cjs");
+const gst = require("../dist/cjs/index.cjs");
 
-assert(!!Pipeline, "CommonJS: Pipeline is not defined");
+assert(!!gst, "CommonJS: Module is not defined");
+assert(gst.Pipeline, "CommonJS: Pipeline is not defined");
