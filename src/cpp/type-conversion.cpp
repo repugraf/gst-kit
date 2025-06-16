@@ -171,7 +171,11 @@ Napi::Value gvalue_to_js(Napi::Env env, const GValue* gvalue) {
       }
       break;
   }
-  
+
+  std::string type_name = g_type_name(G_VALUE_TYPE(gvalue));
+  std::string error_msg = "Cannot convert GValue of type '" + type_name + "' to JavaScript value";
+  Napi::TypeError::New(env, error_msg.c_str()).ThrowAsJavaScriptException();
+
   return env.Undefined();
 }
 

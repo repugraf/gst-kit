@@ -19,7 +19,7 @@ namespace TypeConversion {
    * Convert a GValue to a JavaScript value
    * @param env N-API environment
    * @param gvalue The GValue to convert
-   * @return The converted JavaScript value, or Undefined if conversion failed
+   * @return The converted JavaScript value (throws on conversion failure)
    */
   Napi::Value gvalue_to_js(Napi::Env env, const GValue* gvalue);
 

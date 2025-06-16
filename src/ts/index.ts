@@ -9,9 +9,11 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
+type GStreamerPropertyValue = string | number | boolean;
+
 type ElementBase = {
-  getElementProperty: (key: string) => any;
-  setElementProperty: (key: string, value: any) => void;
+  getElementProperty: (key: string) => GStreamerPropertyValue | null;
+  setElementProperty: (key: string, value: GStreamerPropertyValue) => void;
 };
 
 type Element = {
