@@ -9,10 +9,10 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
-type GStreamerPropertyValue = string | number | boolean;
+export type GStreamerPropertyValue = string | number | boolean;
 
 // Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
-type GStreamerSample = {
+export type GStreamerSample = {
   buf?: Buffer;
   caps: {
     name?: string;
@@ -22,7 +22,7 @@ type GStreamerSample = {
 };
 
 // Extended return types including arrays, buffers, and samples
-type GStreamerPropertyReturnValue =
+export type GStreamerPropertyReturnValue =
   | GStreamerPropertyValue
   | GStreamerPropertyValue[]
   | Buffer
@@ -57,6 +57,9 @@ interface Pipeline {
 // Define the interface for the native addon
 interface NativeAddon {
   Pipeline: new (pipeline: string) => Pipeline;
+  GStreamerPropertyValue: GStreamerPropertyValue;
+  GStreamerSample: GStreamerSample;
+  GStreamerPropertyReturnValue: GStreamerPropertyReturnValue;
 }
 
 // Create require function for ESM
