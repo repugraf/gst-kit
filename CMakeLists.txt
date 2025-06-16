@@ -47,6 +47,7 @@ add_library(native_addon SHARED
     src/cpp/addon.cpp
     src/cpp/pipeline.cpp
     src/cpp/element.cpp
+    src/cpp/type-conversion.cpp
 )
 
 # Set output name and properties

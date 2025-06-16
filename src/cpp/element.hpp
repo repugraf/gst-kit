@@ -15,6 +15,7 @@ public:
   virtual ~Element() = default;
 
   Napi::Value get_element_property(const Napi::CallbackInfo &info);
+  Napi::Value set_element_property(const Napi::CallbackInfo &info);
 
   Napi::Value pull(const Napi::CallbackInfo &info);
 

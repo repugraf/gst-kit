@@ -11,6 +11,7 @@ const projectRoot = join(__dirname, "../../");
 
 type ElementBase = {
   getElementProperty: (key: string) => any;
+  setElementProperty: (key: string, value: any) => void;
 };
 
 type Element = {

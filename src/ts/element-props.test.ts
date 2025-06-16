@@ -4,15 +4,244 @@ import { Pipeline } from "./";
 describe("Element Properties", () => {
   it("should get prop value", () => {
     const caps = "video/x-raw,format=(string)GRAY8";
-    const pipeline = new Pipeline(
-      `videotestsrc ! capsfilter name=src caps=${caps} ! videoconvert ! appsink`
-    );
-    const element = pipeline.getElementByName("src");
+    const pipeline = new Pipeline(`videotestsrc ! capsfilter name=target caps=${caps} ! fakesink`);
+    const element = pipeline.getElementByName("target");
 
     if (!element) throw new Error("Element not found");
 
     const prop = element.getElementProperty("caps");
 
     caps.split(",").forEach(cap => expect(prop).toContain(cap));
+  });
+
+  it("should set string property", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Test setting pattern property
+    const originalPattern = element.getElementProperty("pattern");
+    element.setElementProperty("pattern", "ball");
+    const newPattern = element.getElementProperty("pattern");
+
+    expect(newPattern).toBe("ball");
+    expect(newPattern).not.toBe(originalPattern);
+  });
+
+  it("should set boolean property", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Test setting is-live property
+    const originalIsLive = element.getElementProperty("is-live");
+    element.setElementProperty("is-live", true);
+    const newIsLive = element.getElementProperty("is-live");
+
+    expect(newIsLive).toBe(true);
+    expect(newIsLive).not.toBe(originalIsLive);
+  });
+
+  it("should set integer property", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Test setting num-buffers property
+    element.setElementProperty("num-buffers", 100);
+    const numBuffers = element.getElementProperty("num-buffers");
+
+    expect(numBuffers).toBe(100);
+  });
+
+  it("should set caps property", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=filter ! fakesink");
+    const element = pipeline.getElementByName("filter");
+
+    if (!element) throw new Error("Element not found");
+
+    // Test setting caps property
+    const capsString = "video/x-raw,width=640,height=480,framerate=30/1";
+    element.setElementProperty("caps", capsString);
+    const caps = element.getElementProperty("caps");
+
+    expect(caps).toContain("width=(int)640");
+    expect(caps).toContain("height=(int)480");
+    expect(caps).toContain("framerate=(fraction)30/1");
+  });
+
+  it("should throw error for non-existent property", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    expect(() => {
+      element.setElementProperty("nonexistent-property", "value");
+    }).toThrow("Property 'nonexistent-property' not found");
+  });
+
+  it("should throw error for wrong value type", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    expect(() => {
+      element.setElementProperty("is-live", "not-a-boolean");
+    }).toThrow("Expected boolean value");
+  });
+
+  it("should throw error for insufficient arguments", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    expect(() => {
+      (element as any).setElementProperty("pattern");
+    }).toThrow("setElementProperty requires property name and value");
+  });
+
+  it("should handle property lifecycle correctly", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // 1. Property not supported at all - should throw
+    expect(() => {
+      element.setElementProperty("completely-fake-property", "value");
+    }).toThrow("Property 'completely-fake-property' not found");
+
+    // 2. Property supported but not yet set - should set it
+    const originalPattern = element.getElementProperty("pattern");
+    element.setElementProperty("pattern", "ball");
+    const newPattern = element.getElementProperty("pattern");
+    expect(newPattern).toBe("ball");
+    expect(newPattern).not.toBe(originalPattern);
+
+    // 3. Property exists (already set) - should replace it with new value
+    element.setElementProperty("pattern", "smpte");
+    const replacedPattern = element.getElementProperty("pattern");
+    expect(replacedPattern).toBe("smpte");
+    expect(replacedPattern).not.toBe("ball");
+  });
+
+  it("should handle numeric property replacement", () => {
+    const pipeline = new Pipeline("videotestsrc name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set initial value
+    element.setElementProperty("num-buffers", 50);
+    expect(element.getElementProperty("num-buffers")).toBe(50);
+
+    // Replace with new value
+    element.setElementProperty("num-buffers", 100);
+    expect(element.getElementProperty("num-buffers")).toBe(100);
+  });
+
+  it("should set basic caps on capsfilter", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set basic video caps
+    const capsString = "video/x-raw,width=320,height=240";
+    element.setElementProperty("caps", capsString);
+    const retrievedCaps = element.getElementProperty("caps");
+
+    expect(retrievedCaps).toContain("video/x-raw");
+    expect(retrievedCaps).toContain("width=(int)320");
+    expect(retrievedCaps).toContain("height=(int)240");
+  });
+
+  it("should set complex caps with multiple parameters", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set complex caps with format, dimensions, and framerate
+    const capsString = "video/x-raw,format=RGB,width=640,height=480,framerate=25/1";
+    element.setElementProperty("caps", capsString);
+    const retrievedCaps = element.getElementProperty("caps");
+
+    expect(retrievedCaps).toContain("video/x-raw");
+    expect(retrievedCaps).toContain("format=(string)RGB");
+    expect(retrievedCaps).toContain("width=(int)640");
+    expect(retrievedCaps).toContain("height=(int)480");
+    expect(retrievedCaps).toContain("framerate=(fraction)25/1");
+  });
+
+  it("should update caps with different formats", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set initial caps
+    element.setElementProperty("caps", "video/x-raw,format=RGBA,width=800,height=600");
+    let caps = element.getElementProperty("caps");
+    expect(caps).toContain("format=(string)RGBA");
+    expect(caps).toContain("width=(int)800");
+
+    // Update caps with different format and dimensions
+    element.setElementProperty("caps", "video/x-raw,format=YUV420,width=1920,height=1080");
+    caps = element.getElementProperty("caps");
+    expect(caps).toContain("format=(string)YUV420");
+    expect(caps).toContain("width=(int)1920");
+    expect(caps).toContain("height=(int)1080");
+  });
+
+  it("should set caps with fractional framerate", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set caps with common video framerates
+    const framerates = ["30/1", "25/1", "24000/1001", "60/1"];
+
+    for (const framerate of framerates) {
+      const capsString = `video/x-raw,width=1280,height=720,framerate=${framerate}`;
+      element.setElementProperty("caps", capsString);
+      const retrievedCaps = element.getElementProperty("caps");
+
+      expect(retrievedCaps).toContain(`framerate=(fraction)${framerate}`);
+    }
+  });
+
+  it("should throw error for invalid caps string", () => {
+    const pipeline = new Pipeline("videotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    expect(() => {
+      element.setElementProperty("caps", "completely-invalid-caps-format!!!");
+    }).toThrow("Invalid caps string");
+  });
+
+  it("should handle audio caps on capsfilter", () => {
+    const pipeline = new Pipeline("audiotestsrc ! capsfilter name=target ! fakesink");
+    const element = pipeline.getElementByName("target");
+
+    if (!element) throw new Error("Element not found");
+
+    // Set audio caps
+    const capsString = "audio/x-raw,rate=44100,channels=2";
+    element.setElementProperty("caps", capsString);
+    const retrievedCaps = element.getElementProperty("caps");
+
+    expect(retrievedCaps).toContain("audio/x-raw");
+    expect(retrievedCaps).toContain("rate=(int)44100");
+    expect(retrievedCaps).toContain("channels=(int)2");
   });
 });
