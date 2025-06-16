@@ -19,13 +19,15 @@ describe("FakeSink", () => {
     pipeline.stop();
 
     expect(sample).not.toBeNull();
-    expect(sample).toHaveProperty("buf");
+    expect(sample).toHaveProperty("buffer");
     expect(sample).toHaveProperty("caps");
+    expect(sample).toHaveProperty("flags");
 
     if (sample && typeof sample === "object" && "buf" in sample && "caps" in sample) {
-      expect(sample.buf).toBeInstanceOf(Buffer);
-      expect(sample.buf?.length).toBeGreaterThan(0);
+      expect(sample.buffer).toBeInstanceOf(Buffer);
+      expect(sample.buffer?.length).toBeGreaterThan(0);
       expect(sample.caps).toHaveProperty("name");
+      expect(typeof sample.flags).toBe("number");
     }
   });
 

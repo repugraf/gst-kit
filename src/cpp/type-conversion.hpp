@@ -32,4 +32,12 @@ namespace TypeConversion {
    * @return Error message string
    */
   std::string get_conversion_error_message(GType target_type, const Napi::Value &js_value);
+
+  /**
+   * Convert a GstSample to a JavaScript object with buf, caps, and flags properties
+   * @param env N-API environment
+   * @param sample The GstSample to convert
+   * @return JavaScript object with sample data
+   */
+  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample);
 }

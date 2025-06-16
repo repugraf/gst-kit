@@ -1,5 +1,6 @@
 #include "element.hpp"
 #include "type-conversion.hpp"
+#include <string>
 #include <thread>
 
 Napi::Object Element::CreateFromGstElement(Napi::Env env, GstElement *element) {
@@ -182,20 +183,9 @@ public:
     Napi::HandleScope scope(Env());
 
     if (sample) {
-      // Extract buffer data from sample
-      GstBuffer *buffer = gst_sample_get_buffer(sample);
-      if (buffer) {
-        GstMapInfo mapInfo;
-        if (gst_buffer_map(buffer, &mapInfo, GST_MAP_READ)) {
-          // Create Node.js Buffer from GStreamer buffer data
-          Napi::Buffer<uint8_t> nodeBuffer =
-            Napi::Buffer<uint8_t>::Copy(Env(), mapInfo.data, mapInfo.size);
-          gst_buffer_unmap(buffer, &mapInfo);
-
-          deferred.Resolve(nodeBuffer);
-          return;
-        }
-      }
+      Napi::Object result = TypeConversion::gst_sample_to_js(Env(), sample);
+      deferred.Resolve(result);
+      return;
     }
 
     // Timeout or no sample/error

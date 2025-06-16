@@ -13,7 +13,8 @@ export type GStreamerPropertyValue = string | number | boolean;
 
 // Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
 export type GStreamerSample = {
-  buf?: Buffer;
+  buffer?: Buffer;
+  flags?: number;
   caps: {
     name?: string;
     // Additional structure fields (format, width, height, framerate, etc.)
@@ -40,7 +41,7 @@ type Element = {
 
 type AppSinkElement = {
   readonly type: "app-sink-element";
-  pull(timeout?: number): Promise<Buffer | null>;
+  pull(timeout?: number): Promise<GStreamerSample | null>;
 } & ElementBase;
 
 type AppSrcElement = {

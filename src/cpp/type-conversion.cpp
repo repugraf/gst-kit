@@ -3,7 +3,7 @@
 
 namespace TypeConversion {
   bool js_to_gvalue(
-    Napi::Env env, const Napi::Value &js_value, GType target_type, GValue *out_value,
+    Napi::Env env, const Napi::Value &js_value, GType target_type, GValue *out_value
   ) {
     g_value_init(out_value, target_type);
 
@@ -162,55 +162,7 @@ namespace TypeConversion {
       return env.Null();
     } else if (GST_VALUE_HOLDS_SAMPLE(gvalue)) {
       GstSample *sample = gst_value_get_sample(gvalue);
-      if (!sample) {
-        return env.Null();
-      }
-
-      Napi::Object result = Napi::Object::New(env);
-
-      // Add buffer from sample
-      GstBuffer *buf = gst_sample_get_buffer(sample);
-      if (buf) {
-        GstMapInfo map;
-        if (gst_buffer_map(buf, &map, GST_MAP_READ)) {
-          Napi::Buffer<uint8_t> buffer = Napi::Buffer<uint8_t>::Copy(env, map.data, map.size);
-          result.Set("buf", buffer);
-          gst_buffer_unmap(buf, &map);
-        }
-      }
-
-      // Add caps from sample
-      Napi::Object caps_obj = Napi::Object::New(env);
-      GstCaps *caps = gst_sample_get_caps(sample);
-      if (caps) {
-        const GstStructure *structure = gst_caps_get_structure(caps, 0);
-        if (structure) {
-          // Add structure name
-          const gchar *name = gst_structure_get_name(structure);
-          caps_obj.Set("name", Napi::String::New(env, name));
-
-          // Add individual structure fields
-          auto callback_data = std::make_pair(env, &caps_obj);
-          gst_structure_foreach(
-            structure,
-            [](GQuark field_id, const GValue *value, gpointer user_data) -> gboolean {
-              auto *data = static_cast<std::pair<Napi::Env, Napi::Object *> *>(user_data);
-              Napi::Env env = data->first;
-              Napi::Object *obj = data->second;
-
-              const char *field_name = g_quark_to_string(field_id);
-              Napi::Value js_value = gvalue_to_js(env, value);
-              obj->Set(field_name, js_value);
-
-              return TRUE;
-            },
-            &callback_data
-          );
-        }
-      }
-      result.Set("caps", caps_obj);
-
-      return result;
+      return sample ? gst_sample_to_js(env, sample) : env.Null();
     } else if (G_TYPE_IS_ENUM(G_VALUE_TYPE(gvalue))) {
       gint enum_val = g_value_get_enum(gvalue);
       GEnumClass *enum_class = G_ENUM_CLASS(g_type_class_ref(G_VALUE_TYPE(gvalue)));
@@ -294,5 +246,62 @@ namespace TypeConversion {
           return "Cannot convert " + js_type + " to " + std::string(g_type_name(target_type));
         }
     }
+  }
+
+  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample) {
+    if (!sample) {
+      Napi::TypeError::New(env, "Sample is null").ThrowAsJavaScriptException();
+      return Napi::Object::New(env);
+    }
+
+    Napi::Object result = Napi::Object::New(env);
+
+    // Add buffer from sample
+    GstBuffer *buf = gst_sample_get_buffer(sample);
+    if (buf) {
+      GstMapInfo map;
+      if (gst_buffer_map(buf, &map, GST_MAP_READ)) {
+        Napi::Buffer<uint8_t> buffer = Napi::Buffer<uint8_t>::Copy(env, map.data, map.size);
+        result.Set("buffer", buffer);
+        gst_buffer_unmap(buf, &map);
+      }
+
+      // Add flags from buffer
+      GstBufferFlags flags = gst_buffer_get_flags(buf);
+      result.Set("flags", Napi::Number::New(env, static_cast<uint32_t>(flags)));
+    }
+
+    // Add caps from sample
+    Napi::Object caps_obj = Napi::Object::New(env);
+    GstCaps *caps = gst_sample_get_caps(sample);
+    if (caps) {
+      const GstStructure *structure = gst_caps_get_structure(caps, 0);
+      if (structure) {
+        // Add structure name
+        const gchar *name = gst_structure_get_name(structure);
+        caps_obj.Set("name", Napi::String::New(env, name));
+
+        // Add individual structure fields
+        auto callback_data = std::make_pair(env, &caps_obj);
+        gst_structure_foreach(
+          structure,
+          [](GQuark field_id, const GValue *value, gpointer user_data) -> gboolean {
+            auto *data = static_cast<std::pair<Napi::Env, Napi::Object *> *>(user_data);
+            Napi::Env env = data->first;
+            Napi::Object *obj = data->second;
+
+            const char *field_name = g_quark_to_string(field_id);
+            Napi::Value js_value = gvalue_to_js(env, value);
+            obj->Set(field_name, js_value);
+
+            return TRUE;
+          },
+          &callback_data
+        );
+      }
+    }
+    result.Set("caps", caps_obj);
+
+    return result;
   }
 }

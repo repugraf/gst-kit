@@ -10,11 +10,12 @@ describe("AppSink", () => {
 
     pipeline.play();
 
-    const buffer = await sink.pull();
+    const result = await sink.pull();
 
     pipeline.stop();
 
-    expect(buffer).not.toBeNull();
+    expect(result).not.toBeNull();
+    expect(result?.buffer).toBeDefined();
   });
 
   it("should return null on pull if no frames received", async () => {
@@ -28,11 +29,11 @@ describe("AppSink", () => {
 
     pipeline.play();
 
-    const buffer = await sink.pull(10);
+    const result = await sink.pull(10);
 
     pipeline.stop();
 
-    expect(buffer).toBeNull();
+    expect(result).toBeNull();
   });
 
   it("should return null if pipeline not started", async () => {
@@ -41,11 +42,11 @@ describe("AppSink", () => {
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    const buffer = await sink.pull();
+    const result = await sink.pull();
 
     pipeline.stop();
 
-    expect(buffer).toBeNull();
+    expect(result).toBeNull();
   });
 
   it("should pull expected number of frames", async () => {
@@ -61,8 +62,8 @@ describe("AppSink", () => {
 
     let currFrames = 0;
     while (true) {
-      const buffer = await sink.pull();
-      if (!buffer) break;
+      const result = await sink.pull();
+      if (!result) break;
       currFrames++;
     }
 
