@@ -9,7 +9,10 @@
 
 class Element : public Napi::ObjectWrap<Element> {
 public:
-  static Napi::Object CreateFromGstElement(Napi::Env env, GstElement *element);
+  static Napi::Object CreateFromGstElement(
+    Napi::Env env,
+    GstElement *element
+  );
 
   Element(const Napi::CallbackInfo &info);
   virtual ~Element() = default;

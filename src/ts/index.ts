@@ -11,8 +11,26 @@ const projectRoot = join(__dirname, "../../");
 
 type GStreamerPropertyValue = string | number | boolean;
 
+// Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
+type GStreamerSample = {
+  buf?: Buffer;
+  caps: {
+    name?: string;
+    // Additional structure fields (format, width, height, framerate, etc.)
+    [key: string]: GStreamerPropertyValue | undefined;
+  };
+};
+
+// Extended return types including arrays, buffers, and samples
+type GStreamerPropertyReturnValue =
+  | GStreamerPropertyValue
+  | GStreamerPropertyValue[]
+  | Buffer
+  | GStreamerSample
+  | null;
+
 type ElementBase = {
-  getElementProperty: (key: string) => GStreamerPropertyValue | null;
+  getElementProperty: (key: string) => GStreamerPropertyReturnValue;
   setElementProperty: (key: string, value: GStreamerPropertyValue) => void;
 };
 

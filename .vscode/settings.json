@@ -17,5 +17,5 @@
     "editor.suggest.insertMode": "replace",
     "editor.formatOnSave": true
   },
-  "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, ColumnLimit: 100, AllowShortIfStatementsOnASingleLine: true, BracketAlignmentStyle: BAS_BlockIndent, BreakBeforeBinaryOperators: NonAssignment, ContinuationIndentWidth: 2, BreakStringLiterals: false, AlignAfterOpenBracket: BlockIndent, BreakConstructorInitializers: AfterColon, IndentCaseLabels: true, BreakInheritanceList: AfterColon }"
+  "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, ColumnLimit: 100, AllowShortIfStatementsOnASingleLine: true, BracketAlignmentStyle: BAS_BlockIndent, BreakBeforeBinaryOperators: NonAssignment, ContinuationIndentWidth: 2, BreakStringLiterals: false, AlignAfterOpenBracket: BlockIndent, BreakConstructorInitializers: AfterColon, IndentCaseLabels: true, BreakInheritanceList: AfterColon, FixNamespaceComments: false, NamespaceIndentation: All, BreakAfterReturnType: ExceptShortType }",
 }

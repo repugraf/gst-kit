@@ -95,10 +95,11 @@ Napi::Value Element::get_element_property(const Napi::CallbackInfo &info) {
 Napi::Value Element::set_element_property(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() < 2) {
-    Napi::TypeError::New(env, "setElementProperty requires property name and value").ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, "setElementProperty requires property name and value")
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  
+
   if (!info[0].IsString()) {
     Napi::TypeError::New(env, "Property name must be a string").ThrowAsJavaScriptException();
     return env.Undefined();
@@ -116,23 +117,25 @@ Napi::Value Element::set_element_property(const Napi::CallbackInfo &info) {
     g_object_class_find_property(G_OBJECT_GET_CLASS(element.get()), property_name.c_str());
 
   if (!spec) {
-    Napi::TypeError::New(env, ("Property '" + property_name + "' not found").c_str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, ("Property '" + property_name + "' not found").c_str())
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
   // Check if property is writable
   if (!(spec->flags & G_PARAM_WRITABLE)) {
-    Napi::TypeError::New(env, ("Property '" + property_name + "' is not writable").c_str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, ("Property '" + property_name + "' is not writable").c_str())
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
   GValue value = G_VALUE_INIT;
   GType prop_type = G_PARAM_SPEC_VALUE_TYPE(spec);
-  
+
   // Convert JavaScript value to GValue
   if (!TypeConversion::js_to_gvalue(env, property_value, prop_type, &value)) {
     std::string error_msg = TypeConversion::get_conversion_error_message(prop_type, property_value);
-    
+
     // Handle special error cases
     if (prop_type == gst_caps_get_type() && property_value.IsString()) {
       error_msg = "Invalid caps string";
@@ -140,7 +143,7 @@ Napi::Value Element::set_element_property(const Napi::CallbackInfo &info) {
       std::string enum_str = property_value.As<Napi::String>().Utf8Value();
       error_msg = "Invalid enum value: " + enum_str;
     }
-    
+
     Napi::TypeError::New(env, error_msg.c_str()).ThrowAsJavaScriptException();
     return env.Undefined();
   }
@@ -148,7 +151,7 @@ Napi::Value Element::set_element_property(const Napi::CallbackInfo &info) {
   // Set the property
   g_object_set_property(G_OBJECT(element.get()), property_name.c_str(), &value);
   g_value_unset(&value);
-  
+
   return env.Undefined();
 }
 
