@@ -102,6 +102,9 @@ const require = createRequire(import.meta.url);
 // Load the native addon
 const nativeAddon: NativeAddon = require(join(projectRoot, "build/Release/native_addon.node"));
 
+/**
+ * https://gstreamer.freedesktop.org/documentation/gstreamer/gstbuffer.html?gi-language=c#GstBufferFlags
+ * */
 export const GstBufferFlags = {
   GST_BUFFER_FLAG_LIVE: 16,
   GST_BUFFER_FLAG_DECODE_ONLY: 32,
