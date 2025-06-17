@@ -272,9 +272,9 @@ namespace TypeConversion {
     }
 
     // Add caps from sample
-    Napi::Object caps_obj = Napi::Object::New(env);
     GstCaps *caps = gst_sample_get_caps(sample);
     if (caps) {
+      Napi::Object caps_obj = Napi::Object::New(env);
       const GstStructure *structure = gst_caps_get_structure(caps, 0);
       if (structure) {
         // Add structure name
@@ -299,8 +299,8 @@ namespace TypeConversion {
           &callback_data
         );
       }
+      result.Set("caps", caps_obj);
     }
-    result.Set("caps", caps_obj);
 
     return result;
   }

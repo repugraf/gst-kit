@@ -1,5 +1,9 @@
 #include "element.hpp"
 #include "type-conversion.hpp"
+#include <gst/rtp/gstrtpbuffer.h>
+#include <chrono>
+#include <cstring>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -26,8 +30,11 @@ Element::Element(const Napi::CallbackInfo &info) :
   Napi::Env env = info.Env();
   Napi::Object thisObj = info.This().As<Napi::Object>();
 
-  auto pull_method = Napi::Function::New(
-    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->pull(info); }, "pull"
+  auto get_sample_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->get_sample(info); }, "getSample"
+  );
+  auto on_sample_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->on_sample(info); }, "onSample"
   );
   auto get_element_property_method = Napi::Function::New(
     env,
@@ -43,6 +50,13 @@ Element::Element(const Napi::CallbackInfo &info) :
     },
     "setElementProperty"
   );
+  auto add_pad_probe_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value {
+      return this->add_pad_probe(info);
+    },
+    "addPadProbe"
+  );
 
   std::vector property_descriptors = {
     Napi::PropertyDescriptor::Value("type", Napi::String::New(env, element_type), napi_enumerable),
@@ -51,13 +65,20 @@ Element::Element(const Napi::CallbackInfo &info) :
     ),
     Napi::PropertyDescriptor::Value(
       "setElementProperty", set_element_property_method, napi_enumerable
+    ),
+    Napi::PropertyDescriptor::Value(
+      "addPadProbe", add_pad_probe_method, napi_enumerable
     )
   };
 
-  if (element || GST_IS_APP_SINK(element.get()))
+  if (element || GST_IS_APP_SINK(element.get())) {
     property_descriptors.push_back(
-      Napi::PropertyDescriptor::Value("pull", pull_method, napi_enumerable)
+      Napi::PropertyDescriptor::Value("getSample", get_sample_method, napi_enumerable)
     );
+    property_descriptors.push_back(
+      Napi::PropertyDescriptor::Value("onSample", on_sample_method, napi_enumerable)
+    );
+  }
 
   thisObj.DefineProperties(property_descriptors);
 }
@@ -216,12 +237,12 @@ private:
   Napi::Promise::Deferred deferred;
 };
 
-Napi::Value Element::pull(const Napi::CallbackInfo &info) {
+Napi::Value Element::get_sample(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
   // Validate that we have an app sink element
   if (!element || !GST_IS_APP_SINK(element.get())) {
-    Napi::TypeError::New(env, "pull() can only be called on app-sink-element")
+    Napi::TypeError::New(env, "getSample() can only be called on app-sink-element")
       .ThrowAsJavaScriptException();
     return env.Undefined();
   }
@@ -243,3 +264,279 @@ Napi::Value Element::pull(const Napi::CallbackInfo &info) {
 
   return promise;
 }
+
+// Structure to hold sample callback data
+struct SampleCallbackContext {
+  Napi::ThreadSafeFunction callback;
+  gulong signal_id;
+  GstAppSink *app_sink;
+};
+
+// Signal callback for new-sample
+static void new_sample_callback(GstAppSink *app_sink, gpointer user_data) {
+  SampleCallbackContext *context = static_cast<SampleCallbackContext*>(user_data);
+  
+  // Try to pull the sample
+  GstSample *sample = gst_app_sink_try_pull_sample(app_sink, 0); // Non-blocking
+  
+  if (sample) {
+    // Call the JavaScript callback with the sample
+    context->callback.NonBlockingCall([=](Napi::Env env, Napi::Function jsCallback) {
+      Napi::Object sampleData = TypeConversion::gst_sample_to_js(env, sample);
+      jsCallback.Call({sampleData});
+      
+      // Unref the sample when done
+      gst_sample_unref(sample);
+    });
+  }
+}
+
+Napi::Value Element::on_sample(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  // Validate that we have an app sink element
+  if (!element || !GST_IS_APP_SINK(element.get())) {
+    Napi::TypeError::New(env, "onSample() can only be called on app-sink-element")
+      .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  if (info.Length() < 1 || !info[0].IsFunction()) {
+    Napi::TypeError::New(env, "Expected 1 argument: callback function")
+      .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  Napi::Function callback = info[0].As<Napi::Function>();
+  
+  // Enable signal emission on the appsink
+  g_object_set(element.get(), "emit-signals", TRUE, NULL);
+  
+  // Create a thread-safe function for the callback
+  Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
+    env,
+    callback,
+    "SampleCallback",
+    0,
+    1
+  );
+  
+  // Create context for the signal
+  SampleCallbackContext *context = new SampleCallbackContext{
+    tsfn,
+    0,
+    GST_APP_SINK(element.get())
+  };
+  
+  // Connect to the "new-sample" signal
+  context->signal_id = g_signal_connect(
+    element.get(),
+    "new-sample",
+    G_CALLBACK(new_sample_callback),
+    context
+  );
+  
+  // Return an unsubscribe function
+  return Napi::Function::New(env, [context](const Napi::CallbackInfo& info) -> Napi::Value {
+    // Disconnect the signal (this will stop the callbacks)
+    g_signal_handler_disconnect(context->app_sink, context->signal_id);
+    
+    // Clean up the thread-safe function
+    context->callback.Release();
+    delete context;
+    
+    return info.Env().Undefined();
+  });
+}
+
+// Structure to hold probe data
+struct PadProbeContext {
+  Napi::ThreadSafeFunction callback;
+  gulong probe_id;
+  GstPad *pad;
+  GstElement *element;
+};
+
+// Pad probe callback for comprehensive buffer data extraction
+static GstPadProbeReturn
+pad_probe_callback(GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+  PadProbeContext *context = static_cast<PadProbeContext*>(user_data);
+  
+  if (GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+    
+    if (buffer) {
+      // Copy buffer data immediately to avoid lifetime issues
+      GstMapInfo map;
+      uint8_t* buffer_data_copy = nullptr;
+      gsize buffer_data_size = 0;
+      if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+        buffer_data_copy = new uint8_t[map.size];
+        std::memcpy(buffer_data_copy, map.data, map.size);
+        buffer_data_size = map.size;
+        gst_buffer_unmap(buffer, &map);
+      }
+      
+      // Copy buffer metadata immediately
+      guint64 pts = GST_BUFFER_PTS_IS_VALID(buffer) ? GST_BUFFER_PTS(buffer) : GST_CLOCK_TIME_NONE;
+      guint64 dts = GST_BUFFER_DTS_IS_VALID(buffer) ? GST_BUFFER_DTS(buffer) : GST_CLOCK_TIME_NONE;
+      guint64 duration = GST_BUFFER_DURATION_IS_VALID(buffer) ? GST_BUFFER_DURATION(buffer) : GST_CLOCK_TIME_NONE;
+      guint64 offset = GST_BUFFER_OFFSET_IS_VALID(buffer) ? GST_BUFFER_OFFSET(buffer) : GST_BUFFER_OFFSET_NONE;
+      guint64 offset_end = GST_BUFFER_OFFSET_END_IS_VALID(buffer) ? GST_BUFFER_OFFSET_END(buffer) : GST_BUFFER_OFFSET_NONE;
+      guint32 flags = GST_BUFFER_FLAGS(buffer);
+      
+      // Copy caps data immediately
+      GstCaps *caps = gst_pad_get_current_caps(pad);
+      gchar* caps_string = caps ? gst_caps_to_string(caps) : nullptr;
+      if (caps) {
+        gst_caps_unref(caps);
+      }
+      
+      // Copy RTP data if available
+      bool has_rtp = false;
+      guint32 rtp_timestamp = 0;
+      guint16 rtp_sequence = 0;
+      guint32 rtp_ssrc = 0;
+      guint8 rtp_payload_type = 0;
+      
+      GstRTPBuffer rtp_buffer = GST_RTP_BUFFER_INIT;
+      if (gst_rtp_buffer_map(buffer, GST_MAP_READ, &rtp_buffer)) {
+        has_rtp = true;
+        rtp_timestamp = gst_rtp_buffer_get_timestamp(&rtp_buffer);
+        rtp_sequence = gst_rtp_buffer_get_seq(&rtp_buffer);
+        rtp_ssrc = gst_rtp_buffer_get_ssrc(&rtp_buffer);
+        rtp_payload_type = gst_rtp_buffer_get_payload_type(&rtp_buffer);
+        gst_rtp_buffer_unmap(&rtp_buffer);
+      }
+      
+      // Call the JavaScript callback with copied data
+      context->callback.NonBlockingCall([=](Napi::Env env, Napi::Function jsCallback) {
+        Napi::Object bufferData = Napi::Object::New(env);
+        
+        // Raw buffer data
+        if (buffer_data_copy) {
+          bufferData.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, buffer_data_copy, buffer_data_size));
+          delete[] buffer_data_copy; // Clean up copied data
+        }
+        
+        // Timing information
+        if (pts != GST_CLOCK_TIME_NONE) {
+          bufferData.Set("pts", Napi::Number::New(env, static_cast<double>(pts)));
+        }
+        if (dts != GST_CLOCK_TIME_NONE) {
+          bufferData.Set("dts", Napi::Number::New(env, static_cast<double>(dts)));
+        }
+        if (duration != GST_CLOCK_TIME_NONE) {
+          bufferData.Set("duration", Napi::Number::New(env, static_cast<double>(duration)));
+        }
+        if (offset != GST_BUFFER_OFFSET_NONE) {
+          bufferData.Set("offset", Napi::Number::New(env, static_cast<double>(offset)));
+        }
+        if (offset_end != GST_BUFFER_OFFSET_NONE) {
+          bufferData.Set("offsetEnd", Napi::Number::New(env, static_cast<double>(offset_end)));
+        }
+        
+        // Buffer flags
+        bufferData.Set("flags", Napi::Number::New(env, flags));
+        
+        // Caps information
+        if (caps_string) {
+          Napi::Object caps_obj = Napi::Object::New(env);
+          caps_obj.Set("name", Napi::String::New(env, caps_string));
+          bufferData.Set("caps", caps_obj);
+          g_free(caps_string); // Clean up caps string
+        }
+        
+        // RTP data if available
+        if (has_rtp) {
+          Napi::Object rtpData = Napi::Object::New(env);
+          rtpData.Set("timestamp", Napi::Number::New(env, rtp_timestamp));
+          rtpData.Set("sequence", Napi::Number::New(env, rtp_sequence));
+          rtpData.Set("ssrc", Napi::Number::New(env, rtp_ssrc));
+          rtpData.Set("payloadType", Napi::Number::New(env, rtp_payload_type));
+          
+          bufferData.Set("rtp", rtpData);
+        }
+        
+        jsCallback.Call({bufferData});
+      });
+    }
+  }
+  
+  return GST_PAD_PROBE_OK;
+}
+
+Napi::Value Element::add_pad_probe(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  
+  if (info.Length() < 2) {
+    Napi::TypeError::New(env, "Expected 2 arguments: padName and callback")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  
+  if (!info[0].IsString()) {
+    Napi::TypeError::New(env, "First argument must be a string (pad name)")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  
+  if (!info[1].IsFunction()) {
+    Napi::TypeError::New(env, "Second argument must be a function (callback)")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  
+  std::string pad_name = info[0].As<Napi::String>().Utf8Value();
+  Napi::Function callback = info[1].As<Napi::Function>();
+  
+  // Get the pad from the element
+  GstPad *pad = gst_element_get_static_pad(element.get(), pad_name.c_str());
+  if (!pad) {
+    Napi::Error::New(env, "Failed to get pad: " + pad_name)
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  
+  // Create a thread-safe function for the callback
+  Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
+    env,
+    callback,
+    "PadProbeCallback",
+    0,
+    1
+  );
+  
+  // Create context for the probe
+  PadProbeContext *context = new PadProbeContext{
+    tsfn,
+    0,
+    pad,
+    element.get()
+  };
+  
+  // Add the probe
+  context->probe_id = gst_pad_add_probe(
+    pad,
+    GST_PAD_PROBE_TYPE_BUFFER,
+    pad_probe_callback,
+    context,
+    [](gpointer data) {
+      // Cleanup callback
+      PadProbeContext *context = static_cast<PadProbeContext*>(data);
+      context->callback.Release();
+      gst_object_unref(context->pad);
+      delete context;
+    }
+  );
+  
+  // Return an unsubscribe function
+  return Napi::Function::New(env, [context](const Napi::CallbackInfo& info) -> Napi::Value {
+    // Remove the probe (this will trigger the destructor callback which cleans up)
+    gst_pad_remove_probe(context->pad, context->probe_id);
+    
+    return info.Env().Undefined();
+  });
+}
+
+

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Pipeline } from ".";
+import { Pipeline, type GStreamerSample } from ".";
 
 describe("AppSink", () => {
   it("should pull frames", async () => {
@@ -10,7 +10,7 @@ describe("AppSink", () => {
 
     pipeline.play();
 
-    const result = await sink.pull();
+    const result = await sink.getSample();
 
     pipeline.stop();
 
@@ -29,7 +29,7 @@ describe("AppSink", () => {
 
     pipeline.play();
 
-    const result = await sink.pull(10);
+    const result = await sink.getSample(10);
 
     pipeline.stop();
 
@@ -42,7 +42,7 @@ describe("AppSink", () => {
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    const result = await sink.pull();
+    const result = await sink.getSample();
 
     pipeline.stop();
 
@@ -60,15 +60,47 @@ describe("AppSink", () => {
 
     pipeline.play();
 
+    const samples: GStreamerSample[] = [];
+
     let currFrames = 0;
     while (true) {
-      const result = await sink.pull();
+      const result = await sink.getSample();
       if (!result) break;
+      samples.push(result);
       currFrames++;
     }
 
     pipeline.stop();
 
     expect(currFrames).toBe(frames);
+  });
+
+  it("should receive samples via onSample event callback", async () => {
+    const frames = 3;
+    const pipeline = new Pipeline(
+      `videotestsrc num-buffers=${frames} ! videoconvert ! appsink name=sink`
+    );
+    const sink = pipeline.getElementByName("sink");
+
+    if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
+
+    const samples: GStreamerSample[] = [];
+
+    const unsubscribe: () => void = await new Promise(resolve => {
+      const unsubscribe = sink.onSample((sample: GStreamerSample) => {
+        samples.push(sample);
+        if (samples.length === frames) {
+          resolve(unsubscribe);
+        }
+      });
+
+      pipeline.play();
+    });
+
+    unsubscribe();
+    pipeline.stop();
+
+    expect(samples).toHaveLength(frames);
+    expect(samples[0].buffer).toBeDefined();
   });
 });

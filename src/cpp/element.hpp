@@ -19,8 +19,10 @@ public:
 
   Napi::Value get_element_property(const Napi::CallbackInfo &info);
   Napi::Value set_element_property(const Napi::CallbackInfo &info);
+  Napi::Value add_pad_probe(const Napi::CallbackInfo &info);
 
-  Napi::Value pull(const Napi::CallbackInfo &info);
+  Napi::Value get_sample(const Napi::CallbackInfo &info);
+  Napi::Value on_sample(const Napi::CallbackInfo &info);
 
 private:
   std::unique_ptr<GstElement, decltype(&gst_object_unref)> element;

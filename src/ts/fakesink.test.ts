@@ -110,7 +110,7 @@ describe("FakeSink", () => {
     expect(sample).not.toBeNull();
     if (sample && typeof sample === "object" && "caps" in sample) {
       const caps = sample.caps;
-      expect(caps.name).toContain("video/x-raw");
+      expect(caps?.name).toContain("video/x-raw");
     }
   });
 });
