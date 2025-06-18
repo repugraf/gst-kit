@@ -24,6 +24,8 @@ public:
   Napi::Value get_sample(const Napi::CallbackInfo &info);
   Napi::Value on_sample(const Napi::CallbackInfo &info);
 
+  Napi::Value push(const Napi::CallbackInfo &info);
+
 private:
   std::unique_ptr<GstElement, decltype(&gst_object_unref)> element;
 };
