@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
-export type GStreamerPropertyValue = string | number | boolean;
+export type GStreamerPropertyValue = string | number | boolean | bigint;
 
 // Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
 export type GStreamerSample = {
@@ -20,6 +20,32 @@ export type GStreamerSample = {
     // Additional structure fields (format, width, height, framerate, etc.)
     [key: string]: GStreamerPropertyValue | undefined;
   };
+};
+
+// GStreamer message object returned by busPop
+export type GstMessage = {
+  type: string;
+  srcElementName?: string;
+  timestamp: bigint;
+  structureName?: string;
+  // Structure fields are added dynamically based on message content
+  [key: string]: GStreamerPropertyValue | undefined;
+
+  // Error message specific fields
+  errorMessage?: string;
+  errorDomain?: string;
+  errorCode?: number;
+  debugInfo?: string;
+
+  // Warning message specific fields
+  warningMessage?: string;
+  warningDomain?: string;
+  warningCode?: number;
+
+  // State change message specific fields
+  oldState?: number;
+  newState?: number;
+  pendingState?: number;
 };
 
 // Extended return types including arrays, buffers, and samples
@@ -89,6 +115,7 @@ interface Pipeline {
   getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;
   queryPosition(): number;
   queryDuration(): number;
+  busPop(timeout?: number): Promise<GstMessage | null>;
 }
 
 // Define the interface for the native addon

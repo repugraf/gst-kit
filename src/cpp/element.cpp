@@ -1,4 +1,5 @@
 #include "element.hpp"
+#include "async-workers.hpp"
 #include "type-conversion.hpp"
 #include <chrono>
 #include <cstring>
@@ -184,66 +185,6 @@ Napi::Value Element::set_element_property(const Napi::CallbackInfo &info) {
   return env.Undefined();
 }
 
-// AsyncWorker for pulling samples with timeout
-class PullSampleWorker : public Napi::AsyncWorker {
-public:
-  PullSampleWorker(Napi::Env env, GstAppSink *appSink, guint64 timeoutMs) :
-      Napi::AsyncWorker(env), appSink(appSink), timeoutMs(timeoutMs), sample(nullptr),
-      deferred(env) {
-    // Increase reference count since we'll be using this in another thread
-    gst_object_ref(appSink);
-  }
-
-  ~PullSampleWorker() { cleanup(); }
-
-  void Execute() override {
-    // Convert timeout from milliseconds to nanoseconds (GstClockTime)
-    GstClockTime timeout = timeoutMs * GST_MSECOND;
-
-    // Use GStreamer's built-in timeout mechanism
-    sample = gst_app_sink_try_pull_sample(appSink, timeout);
-    // sample will be NULL if timeout expires or on EOS/error
-  }
-
-  Napi::Promise::Deferred GetPromise() { return deferred; }
-
-  void OnOK() override {
-    Napi::HandleScope scope(Env());
-
-    if (sample) {
-      Napi::Object result = TypeConversion::gst_sample_to_js(Env(), sample);
-      deferred.Resolve(result);
-      return;
-    }
-
-    // Timeout or no sample/error
-    deferred.Resolve(Env().Null());
-  }
-
-  void OnError(const Napi::Error &error) override {
-    Napi::HandleScope scope(Env());
-    deferred.Reject(error.Value());
-  }
-
-private:
-  void cleanup() {
-    // Clean up resources - safe to call multiple times
-    if (sample) {
-      gst_sample_unref(sample);
-      sample = nullptr;
-    }
-    if (appSink) {
-      gst_object_unref(appSink);
-      appSink = nullptr;
-    }
-  }
-
-  GstAppSink *appSink;
-  guint64 timeoutMs;
-  GstSample *sample;
-  Napi::Promise::Deferred deferred;
-};
-
 Napi::Value Element::get_sample(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -255,17 +196,17 @@ Napi::Value Element::get_sample(const Napi::CallbackInfo &info) {
   }
 
   // Default timeout is 1000ms (1 second)
-  guint64 timeoutMs = 1000;
+  guint64 timeout_ms = 1000;
 
   // Check if timeout parameter is provided
   if (info.Length() > 0 && info[0].IsNumber()) {
-    timeoutMs = info[0].As<Napi::Number>().Uint32Value();
+    timeout_ms = info[0].As<Napi::Number>().Uint32Value();
   }
 
   // Create worker and get its promise
   // Note: N-API AsyncWorker manages its own memory - it will be automatically
   // deleted when the work completes (OnOK or OnError is called)
-  PullSampleWorker *worker = new PullSampleWorker(env, GST_APP_SINK(element.get()), timeoutMs);
+  PullSampleWorker *worker = new PullSampleWorker(env, GST_APP_SINK(element.get()), timeout_ms);
   Napi::Promise promise = worker->GetPromise().Promise();
   worker->Queue();
 

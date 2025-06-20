@@ -48,6 +48,7 @@ add_library(native_addon SHARED
     src/cpp/pipeline.cpp
     src/cpp/element.cpp
     src/cpp/type-conversion.cpp
+    src/cpp/async-workers.cpp
 )
 
 # Set output name and properties
