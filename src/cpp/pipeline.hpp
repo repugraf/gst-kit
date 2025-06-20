@@ -16,6 +16,8 @@ public:
   Napi::Value stop(const Napi::CallbackInfo &info);
   Napi::Value playing(const Napi::CallbackInfo &info);
   Napi::Value get_element_by_name(const Napi::CallbackInfo &info);
+  Napi::Value queryPosition(const Napi::CallbackInfo &info);
+  Napi::Value queryDuration(const Napi::CallbackInfo &info);
 
 private:
   std::string pipeline_string;

@@ -87,6 +87,8 @@ interface Pipeline {
   stop(): void;
   playing(): boolean;
   getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;
+  queryPosition(): number;
+  queryDuration(): number;
 }
 
 // Define the interface for the native addon

@@ -50,6 +50,20 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
     },
     "getElementByName"
   );
+  auto queryPosition_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value {
+      return this->queryPosition(info);
+    },
+    "queryPosition"
+  );
+  auto queryDuration_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value {
+      return this->queryDuration(info);
+    },
+    "queryDuration"
+  );
 
   thisObj.DefineProperties(
     {Napi::PropertyDescriptor::Value("play", play_method, napi_enumerable),
@@ -57,6 +71,12 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
      Napi::PropertyDescriptor::Value("playing", playing_method, napi_enumerable),
      Napi::PropertyDescriptor::Value(
        "getElementByName", get_element_by_name_method, napi_enumerable
+     ),
+     Napi::PropertyDescriptor::Value(
+       "queryPosition", queryPosition_method, napi_enumerable
+     ),
+     Napi::PropertyDescriptor::Value(
+       "queryDuration", queryDuration_method, napi_enumerable
      )}
   );
 }
@@ -88,4 +108,18 @@ Napi::Value Pipeline::playing(const Napi::CallbackInfo &info) {
     gst_element_get_state(GST_ELEMENT(pipeline.get()), &state, &pending, 0);
 
   return Napi::Boolean::New(info.Env(), (state == GST_STATE_PLAYING));
+}
+
+Napi::Value Pipeline::queryPosition(const Napi::CallbackInfo &info) {
+  gint64 pos;
+  gst_element_query_position(GST_ELEMENT(pipeline.get()), GST_FORMAT_TIME, &pos);
+  double r = pos == -1 ? -1 : (double)pos / GST_SECOND;
+  return Napi::Number::New(info.Env(), r);
+}
+
+Napi::Value Pipeline::queryDuration(const Napi::CallbackInfo &info) {
+  gint64 dur;
+  gst_element_query_duration(GST_ELEMENT(pipeline.get()), GST_FORMAT_TIME, &dur);
+  double r = dur == -1 ? -1 : (double)dur / GST_SECOND;
+  return Napi::Number::New(info.Env(), r);
 }
