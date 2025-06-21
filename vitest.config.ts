@@ -10,6 +10,7 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: ["node_modules/", "dist/"],
     },
+    slowTestThreshold: 500,
     env: {
       NODE_ENV: "test",
     },
