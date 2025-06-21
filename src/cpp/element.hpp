@@ -20,6 +20,8 @@ public:
   Napi::Value get_element_property(const Napi::CallbackInfo &info);
   Napi::Value set_element_property(const Napi::CallbackInfo &info);
   Napi::Value add_pad_probe(const Napi::CallbackInfo &info);
+  Napi::Value set_pad(const Napi::CallbackInfo &info);
+  Napi::Value get_pad(const Napi::CallbackInfo &info);
 
   Napi::Value get_sample(const Napi::CallbackInfo &info);
   Napi::Value on_sample(const Napi::CallbackInfo &info);

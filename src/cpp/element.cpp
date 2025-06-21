@@ -58,6 +58,12 @@ Element::Element(const Napi::CallbackInfo &info) :
     [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->add_pad_probe(info); },
     "addPadProbe"
   );
+  auto set_pad_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->set_pad(info); }, "setPad"
+  );
+  auto get_pad_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->get_pad(info); }, "getPad"
+  );
   auto push_method = Napi::Function::New(
     env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->push(info); }, "push"
   );
@@ -70,7 +76,9 @@ Element::Element(const Napi::CallbackInfo &info) :
     Napi::PropertyDescriptor::Value(
       "setElementProperty", set_element_property_method, napi_enumerable
     ),
-    Napi::PropertyDescriptor::Value("addPadProbe", add_pad_probe_method, napi_enumerable)
+    Napi::PropertyDescriptor::Value("addPadProbe", add_pad_probe_method, napi_enumerable),
+    Napi::PropertyDescriptor::Value("setPad", set_pad_method, napi_enumerable),
+    Napi::PropertyDescriptor::Value("getPad", get_pad_method, napi_enumerable)
   };
 
   if (element || GST_IS_APP_SINK(element.get())) {
@@ -547,4 +555,76 @@ Napi::Value Element::push(const Napi::CallbackInfo &info) {
   }
 
   return env.Undefined();
+}
+
+Napi::Value Element::set_pad(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  
+  if (info.Length() < 2 || !info[0].IsString() || !info[1].IsString()) {
+    Napi::TypeError::New(env, "setPad() requires two string arguments (attribute, padName)")
+      .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  if (!element.get()) {
+    Napi::Error::New(env, "Element is null or not initialized").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  std::string attribute = info[0].As<Napi::String>().Utf8Value();
+  std::string padName = info[1].As<Napi::String>().Utf8Value();
+
+  GstPad *pad = gst_element_get_static_pad(element.get(), padName.c_str());
+  if (!pad) {
+    Napi::Error::New(env, "Pad not found: " + padName).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  g_object_set(G_OBJECT(element.get()), attribute.c_str(), pad, NULL);
+  
+  gst_object_unref(pad);
+  
+  return env.Undefined();
+}
+
+Napi::Value Element::get_pad(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  
+  if (info.Length() < 1 || !info[0].IsString()) {
+    Napi::TypeError::New(env, "getPad() requires one string argument (padName)")
+      .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+
+  if (!element.get()) {
+    return env.Null();
+  }
+
+  std::string padName = info[0].As<Napi::String>().Utf8Value();
+
+  GstPad *pad = gst_element_get_static_pad(element.get(), padName.c_str());
+  
+  if (!pad) {
+    return env.Null();
+  }
+
+  // Create an object with pad information
+  Napi::Object padObj = Napi::Object::New(env);
+  padObj.Set("name", Napi::String::New(env, GST_PAD_NAME(pad)));
+  padObj.Set("direction", Napi::Number::New(env, GST_PAD_DIRECTION(pad)));
+  
+  // Get pad caps if available
+  GstCaps *caps = gst_pad_get_current_caps(pad);
+  if (caps) {
+    gchar *caps_str = gst_caps_to_string(caps);
+    padObj.Set("caps", Napi::String::New(env, caps_str));
+    g_free(caps_str);
+    gst_caps_unref(caps);
+  } else {
+    padObj.Set("caps", env.Null());
+  }
+  
+  gst_object_unref(pad);
+  
+  return padObj;
 }

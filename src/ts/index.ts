@@ -70,6 +70,12 @@ export type RTPData = {
   payloadType: number;
 };
 
+export type GstPad = {
+  name: string;
+  direction: number; // 0 = unknown, 1 = src, 2 = sink
+  caps: string | null;
+};
+
 export type BufferData = {
   // Raw buffer data
   buffer?: Buffer;
@@ -98,6 +104,8 @@ type ElementBase = {
   getElementProperty: (key: string) => GStreamerPropertyReturnValue;
   setElementProperty: (key: string, value: GStreamerPropertyValue) => void;
   addPadProbe: (padName: string, callback: (bufferData: BufferData) => void) => () => void;
+  setPad: (attribute: string, padName: string) => void;
+  getPad: (padName: string) => GstPad | null;
 };
 
 type Element = {
