@@ -13,6 +13,7 @@ public:
   Pipeline(const Napi::CallbackInfo &info);
 
   Napi::Value play(const Napi::CallbackInfo &info);
+  Napi::Value pause(const Napi::CallbackInfo &info);
   Napi::Value stop(const Napi::CallbackInfo &info);
   Napi::Value playing(const Napi::CallbackInfo &info);
   Napi::Value get_element_by_name(const Napi::CallbackInfo &info);

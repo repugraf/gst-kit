@@ -110,6 +110,7 @@ type AppSrcElement = {
 
 interface Pipeline {
   play(): void;
+  pause(): void;
   stop(): void;
   playing(): boolean;
   getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;

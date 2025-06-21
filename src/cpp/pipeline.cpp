@@ -37,6 +37,10 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
   auto play_method = Napi::Function::New(
     env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->play(info); }, "play"
   );
+  auto pause_method = Napi::Function::New(
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->pause(info); },
+    "pause"
+  );
   auto stop_method = Napi::Function::New(
     env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->stop(info); }, "stop"
   );
@@ -68,6 +72,7 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
 
   thisObj.DefineProperties(
     {Napi::PropertyDescriptor::Value("play", play_method, napi_enumerable),
+     Napi::PropertyDescriptor::Value("pause", pause_method, napi_enumerable),
      Napi::PropertyDescriptor::Value("stop", stop_method, napi_enumerable),
      Napi::PropertyDescriptor::Value("playing", playing_method, napi_enumerable),
      Napi::PropertyDescriptor::Value(
@@ -81,6 +86,11 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
 
 Napi::Value Pipeline::play(const Napi::CallbackInfo &info) {
   gst_element_set_state(GST_ELEMENT(pipeline.get()), GST_STATE_PLAYING);
+  return info.Env().Undefined();
+}
+
+Napi::Value Pipeline::pause(const Napi::CallbackInfo &info) {
+  gst_element_set_state(GST_ELEMENT(pipeline.get()), GST_STATE_PAUSED);
   return info.Env().Undefined();
 }
 
@@ -103,9 +113,13 @@ Napi::Value Pipeline::playing(const Napi::CallbackInfo &info) {
   GstState state;
   GstState pending;
   GstStateChangeReturn ret =
-    gst_element_get_state(GST_ELEMENT(pipeline.get()), &state, &pending, 0);
+    gst_element_get_state(GST_ELEMENT(pipeline.get()), &state, &pending, 5 * GST_MSECOND);
 
-  return Napi::Boolean::New(info.Env(), (state == GST_STATE_PLAYING));
+  // If state change is in progress and we're transitioning to PLAYING, consider it as playing
+  bool is_playing =
+    (state == GST_STATE_PLAYING) || (ret == GST_STATE_CHANGE_ASYNC && pending == GST_STATE_PLAYING);
+
+  return Napi::Boolean::New(info.Env(), is_playing);
 }
 
 Napi::Value Pipeline::query_position(const Napi::CallbackInfo &info) {
