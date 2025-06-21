@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample } from ".";
 
-describe("AppSink", () => {
+describe.concurrent("AppSink", () => {
   it("should pull frames", async () => {
     const pipeline = new Pipeline("videotestsrc ! videoconvert ! appsink name=sink");
     const sink = pipeline.getElementByName("sink");
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    pipeline.play();
+    await pipeline.play();
 
     const result = await sink.getSample();
 
@@ -27,7 +27,7 @@ describe("AppSink", () => {
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    pipeline.play();
+    await pipeline.play(10);
 
     const result = await sink.getSample(10);
 
@@ -58,7 +58,7 @@ describe("AppSink", () => {
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    pipeline.play();
+    await pipeline.play();
 
     const samples: GStreamerSample[] = [];
 

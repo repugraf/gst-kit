@@ -1,17 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample } from ".";
 
-describe("FakeSink", () => {
+describe.concurrent("FakeSink", () => {
   it("should capture last sample when enabled", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink enable-last-sample=true name=sink");
     const fakesink = pipeline.getElementByName("sink");
 
     if (!fakesink) throw new Error("FakeSink element not found");
 
-    pipeline.play();
-
-    // Wait for some frames to be processed
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await pipeline.play();
 
     // Get the last sample
     const sample = fakesink.getElementProperty("last-sample") as GStreamerSample;
@@ -37,7 +34,7 @@ describe("FakeSink", () => {
 
     if (!fakesink) throw new Error("FakeSink element not found");
 
-    pipeline.play();
+    await pipeline.play();
 
     // Wait for some frames to be processed
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -50,7 +47,7 @@ describe("FakeSink", () => {
     expect(sample).toBeNull();
   });
 
-  it("should handle pipeline state changes correctly", () => {
+  it("should handle pipeline state changes correctly", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink enable-last-sample=true name=sink");
     const fakesink = pipeline.getElementByName("sink");
 
@@ -59,10 +56,10 @@ describe("FakeSink", () => {
     // Pipeline should not be playing initially
     expect(pipeline.playing()).toBe(false);
 
-    pipeline.play();
-    // Note: We don't check playing() immediately after play() since state transitions are async
+    await pipeline.play();
+    expect(pipeline.playing()).toBe(true);
 
-    pipeline.stop();
+    await pipeline.stop();
     expect(pipeline.playing()).toBe(false);
   });
 
@@ -75,7 +72,7 @@ describe("FakeSink", () => {
 
     if (!fakesink) throw new Error("FakeSink element not found");
 
-    pipeline.play();
+    await pipeline.play();
 
     // Wait for all buffers to be processed
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -99,7 +96,7 @@ describe("FakeSink", () => {
 
     if (!fakesink) throw new Error("FakeSink element not found");
 
-    pipeline.play();
+    await pipeline.play();
 
     await new Promise(resolve => setTimeout(resolve, 50));
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample, GstBufferFlags, type BufferData } from ".";
 
-describe("codec", () => {
+describe.concurrent("codec", () => {
   it("should be able to distinguish between delta and key frames", async () => {
     const frames = 5;
     const pipeline = new Pipeline(
@@ -11,7 +11,7 @@ describe("codec", () => {
 
     if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    pipeline.play();
+    await pipeline.play();
 
     const samples: GStreamerSample[] = [];
 

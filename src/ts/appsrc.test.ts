@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 
-describe("AppSrc", () => {
+describe.concurrent("AppSrc", () => {
   it("should push buffer to app source", () => {
     const pipeline = new Pipeline("appsrc name=source ! fakesink");
     const source = pipeline.getElementByName("source");

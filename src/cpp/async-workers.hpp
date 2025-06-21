@@ -51,4 +51,27 @@ private:
   guint64 timeout_ms;
   GstSample *sample;
   Napi::Promise::Deferred deferred;
+};
+
+// AsyncWorker for pipeline state changes with timeout
+class StateChangeWorker : public Napi::AsyncWorker {
+public:
+  StateChangeWorker(Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout);
+  ~StateChangeWorker();
+
+  void Execute() override;
+  void OnOK() override;
+  void OnError(const Napi::Error &error) override;
+  
+  Napi::Promise::Deferred GetPromise();
+
+private:
+  void cleanup();
+
+  GstPipeline *pipeline;
+  GstState target_state;
+  GstClockTime timeout;
+  GstStateChangeReturn state_change_result;
+  GstState final_state;
+  Napi::Promise::Deferred deferred;
 }; 

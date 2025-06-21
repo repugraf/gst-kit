@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Pipeline } from "./";
 
-describe("Element Properties", () => {
+describe.concurrent("Element Properties", () => {
   it("should get prop value", () => {
     const caps = "video/x-raw,format=(string)GRAY8";
     const pipeline = new Pipeline(`videotestsrc ! capsfilter name=target caps=${caps} ! fakesink`);

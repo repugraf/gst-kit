@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 
-describe("Pipeline Query Methods", () => {
+describe.concurrent("Pipeline Query Methods", () => {
   it("should query position from videotestsrc pipeline", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=100 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     const position = pipeline.queryPosition();
 
@@ -18,7 +18,7 @@ describe("Pipeline Query Methods", () => {
   it("should query duration from videotestsrc pipeline", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=100 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     const duration = pipeline.queryDuration();
 
@@ -44,7 +44,7 @@ describe("Pipeline Query Methods", () => {
   it("should query position and duration during playback", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=50 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     const position1 = pipeline.queryPosition();
     const duration = pipeline.queryDuration();

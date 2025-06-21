@@ -199,4 +199,83 @@ void PullSampleWorker::cleanup() {
     gst_object_unref(app_sink);
     app_sink = nullptr;
   }
+}
+
+// StateChangeWorker implementation
+StateChangeWorker::StateChangeWorker(Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout) :
+    Napi::AsyncWorker(env), pipeline(pipeline), target_state(target_state), timeout(timeout),
+    state_change_result(GST_STATE_CHANGE_FAILURE), final_state(GST_STATE_VOID_PENDING), deferred(env) {
+  // Increase reference count since we'll be using this in another thread
+  gst_object_ref(pipeline);
+}
+
+StateChangeWorker::~StateChangeWorker() { 
+  cleanup(); 
+}
+
+void StateChangeWorker::Execute() {
+  // Set the state
+  state_change_result = gst_element_set_state(GST_ELEMENT(pipeline), target_state);
+  
+  if (state_change_result == GST_STATE_CHANGE_FAILURE) {
+    // State change failed immediately
+    return;
+  }
+  
+  // Wait for the state change to complete
+  GstState pending;
+  state_change_result = gst_element_get_state(GST_ELEMENT(pipeline), &final_state, &pending, timeout);
+  
+  // state_change_result will be:
+  // - GST_STATE_CHANGE_SUCCESS: State change completed successfully
+  // - GST_STATE_CHANGE_ASYNC: State change is in progress (we timed out)
+  // - GST_STATE_CHANGE_FAILURE: State change failed
+}
+
+Napi::Promise::Deferred StateChangeWorker::GetPromise() { 
+  return deferred; 
+}
+
+void StateChangeWorker::OnOK() {
+  Napi::HandleScope scope(Env());
+  
+  Napi::Object result = Napi::Object::New(Env());
+  
+  // Include the state change result
+  std::string result_str;
+  switch (state_change_result) {
+    case GST_STATE_CHANGE_SUCCESS:
+      result_str = "success";
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      result_str = "async";
+      break;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      result_str = "no-preroll";
+      break;
+    case GST_STATE_CHANGE_FAILURE:
+      result_str = "failure";
+      break;
+    default:
+      result_str = "unknown";
+      break;
+  }
+  
+  result.Set("result", Napi::String::New(Env(), result_str));
+  result.Set("finalState", Napi::Number::New(Env(), final_state));
+  result.Set("targetState", Napi::Number::New(Env(), target_state));
+  
+  deferred.Resolve(result);
+}
+
+void StateChangeWorker::OnError(const Napi::Error &error) {
+  Napi::HandleScope scope(Env());
+  deferred.Reject(error.Value());
+}
+
+void StateChangeWorker::cleanup() {
+  if (pipeline) {
+    gst_object_unref(pipeline);
+    pipeline = nullptr;
+  }
 } 

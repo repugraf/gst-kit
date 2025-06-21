@@ -56,6 +56,13 @@ export type GStreamerPropertyReturnValue =
   | GStreamerSample
   | null;
 
+// State change result returned by play(), pause(), and stop()
+export type StateChangeResult = {
+  result: "success" | "async" | "no-preroll" | "failure" | "unknown";
+  finalState: number;
+  targetState: number;
+};
+
 export type RTPData = {
   timestamp: number;
   sequence: number;
@@ -99,7 +106,7 @@ type Element = {
 
 type AppSinkElement = {
   readonly type: "app-sink-element";
-  getSample(timeout?: number): Promise<GStreamerSample | null>;
+  getSample(timeoutMs?: number): Promise<GStreamerSample | null>;
   onSample(callback: (sample: GStreamerSample) => void): () => void;
 } & ElementBase;
 
@@ -109,14 +116,15 @@ type AppSrcElement = {
 } & ElementBase;
 
 interface Pipeline {
-  play(): void;
-  pause(): void;
-  stop(): void;
+  play(timeoutMs?: number): Promise<StateChangeResult>;
+  pause(timeoutMs?: number): Promise<StateChangeResult>;
+  stop(timeoutMs?: number): Promise<StateChangeResult>;
   playing(): boolean;
   getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;
   queryPosition(): number;
   queryDuration(): number;
-  busPop(timeout?: number): Promise<GstMessage | null>;
+  busPop(timeoutMs?: number): Promise<GstMessage | null>;
+  seek(positionSeconds: number): boolean;
 }
 
 // Define the interface for the native addon

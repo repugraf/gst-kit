@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
 
-describe("Pipeline busPop Method", () => {
+describe.concurrent("Pipeline busPop Method", () => {
   it("should return null when no message available with timeout", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
@@ -18,7 +18,7 @@ describe("Pipeline busPop Method", () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
     // Start pipeline to generate state-changed messages
-    pipeline.play();
+    await pipeline.play();
 
     // Pop a message with reasonable timeout
     const message = await pipeline.busPop(1000);
@@ -33,7 +33,7 @@ describe("Pipeline busPop Method", () => {
   it("should handle async preroll message", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     // Look for async-done or state-changed messages
     let foundMessage = false;
@@ -61,7 +61,7 @@ describe("Pipeline busPop Method", () => {
     // Create a pipeline with invalid file source that should generate error messages during playback
     const pipeline = new Pipeline("filesrc location=/nonexistent/file.mp4 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     const message = await pipeline.busPop(1000);
 
@@ -93,7 +93,7 @@ describe("Pipeline busPop Method", () => {
   it("should handle infinite timeout with negative value", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=1 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     // Use -1 for infinite timeout, but pipeline should generate EOS quickly
     const message = await pipeline.busPop(-1);
@@ -107,7 +107,7 @@ describe("Pipeline busPop Method", () => {
   it("should handle message with structure data", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=1 ! fakesink");
 
-    pipeline.play();
+    await pipeline.play();
 
     // Look for messages with structure data
     let messageWithStructure: GstMessage | null = null;
