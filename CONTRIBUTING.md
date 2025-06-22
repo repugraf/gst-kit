@@ -1,4 +1,4 @@
-# Contributing to Node.js C++ Addon Template
+# Contributing to GStreamer Kit
 
 Thank you for your interest in contributing to this project! This document provides guidelines and instructions for contributing.
 
@@ -43,7 +43,7 @@ git checkout -b feature/your-feature-name
 
 ## Building
 
-The project uses cmake-js for building the native addon and Rollup for TypeScript bundling:
+The project uses cmake-js for building the native GStreamer addon and TypeScript compilation:
 
 ```bash
 npm run build
@@ -59,7 +59,7 @@ npm test
 
 This will:
 
-- Build the native addon
+- Build the native GStreamer addon
 - Run unit tests
 - Test both CommonJS and ESM modules
 

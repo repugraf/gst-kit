@@ -1,67 +1,3 @@
-# Node.js Native Addon with TypeScript
-
-This project demonstrates how to create a Node.js native addon using C++ and TypeScript, built with cmake-js.
-
-## Prerequisites
-
-- Node.js (v14 or higher)
-- npm
-- CMake (3.1 or higher)
-- C++ compiler (GCC, Clang, or MSVC)
-
-## Installation
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-## Building
-
-To build the project, run:
-
-```bash
-npm run build
-```
-
-This will:
-
-1. Clean the build and dist directories
-2. Compile the C++ code using cmake-js
-3. Compile the TypeScript code
-
-## Testing
-
-Confirm library is working in both CommonJS, ESM and unit tests are passing:
-
-```bash
-npm run test
-```
-
-### Runtime Support
-
-This library supports the following JavaScript runtimes:
-
-- **Node.js** ✅ (Full support)
-- **Bun** ✅ (Full support)
-- **Deno** ❌ (Not supported - Deno cannot load native Node.js addons)
-
-> **Note**: Native addons (`.node` files) require Node.js or Bun. Deno's FFI system cannot provide the NAPI runtime environment needed for native GStreamer bindings.
-
-## Project Structure
-
-- `src/cpp/` - C++ source code for the native addon
-  - `addon.cpp` - C++ to Node binding
-  - `add.cpp` and `add.hpp` - Native C++ code
-- `src/ts/` - TypeScript source code
-  - `index.ts` - TypeScript interface for the native addon
-- `modules/` - Assertion tests of dist for both CommonJS and ESM
-- `CMakeLists.txt` - CMake configuration
-- `tsconfig.json` - TypeScript configuration
-- `package.json` - Project configuration and dependencies
-
 # GStreamer Kit
 
 A Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing.
@@ -75,6 +11,7 @@ npm install @gst/kit
 ## Quick Start
 
 ### Basic Pipeline
+
 ```javascript
 import { Pipeline } from '@gst/kit';
 
@@ -88,6 +25,7 @@ setTimeout(() => {
 ```
 
 ### Working with AppSink (Pull-based Approach)
+
 ```javascript
 import { Pipeline } from '@gst/kit';
 
@@ -109,6 +47,7 @@ if (sink?.type === 'app-sink-element') {
 ```
 
 ### Working with AppSink (Event-Driven/Push Approach)
+
 ```javascript
 import { Pipeline } from '@gst/kit';
 
@@ -134,6 +73,7 @@ if (sink?.type === 'app-sink-element') {
 ```
 
 ### Extracting Buffer Data with Pad Probes
+
 ```javascript
 import { Pipeline } from '@gst/kit';
 
@@ -180,6 +120,7 @@ if (payloader) {
 ```
 
 ### Advanced Example: Multiple Probes with Auto-Cleanup
+
 ```javascript
 import { Pipeline } from '@gst/kit';
 
@@ -232,6 +173,7 @@ if (encoder && payloader) {
 ## API Reference
 
 ### Pipeline
+
 - `new Pipeline(description: string)`: Create a new pipeline
 - `play()`: Start pipeline playback
 - `stop()`: Stop pipeline
@@ -239,11 +181,13 @@ if (encoder && payloader) {
 - `getElementByName(name: string)`: Get element by name
 
 ### Element
+
 - `getElementProperty(key: string)`: Get element property
 - `setElementProperty(key: string, value: any)`: Set element property
 - `addPadProbe(padName: string, callback: Function)`: Add pad probe for comprehensive buffer data including timing, flags, caps, and RTP info (returns unsubscribe function)
 
 ### App Elements
+
 - `getSample(timeout?: number)`: Pull sample from appsink on-demand (returns Promise, runs async)
 - `onSample(callback: Function)`: Reactive sample reception - samples pushed automatically (returns unsubscribe function)
 

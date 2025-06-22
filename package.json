@@ -18,22 +18,25 @@
     "test:bun": "bun modules/common.cjs && bun modules/esm.mjs",
     "test:unit": "vitest --no-watch",
     "test": "npm run test:node && npm run test:unit",
-    "postinstall": "node scripts/ensure-native-addon.js",
+    "postinstall": "node scripts/ensure-native-addon.mjs",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "keywords": [
-    "node",
+    "gstreamer",
+    "multimedia",
+    "streaming",
+    "video",
+    "audio",
+    "pipeline",
     "native",
     "addon",
-    "cpp",
-    "typescript",
-    "template"
+    "typescript"
   ],
-  "author": "",
+  "author": "Serhii Mamedov",
   "license": "ISC",
-  "description": "A template for creating Node.js native addons with C++ and TypeScript",
+  "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
     "node-addon-api": "8.3.1"
   },

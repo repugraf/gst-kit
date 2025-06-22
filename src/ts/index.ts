@@ -147,7 +147,7 @@ interface NativeAddon {
 const require = createRequire(import.meta.url);
 
 // Load the native addon
-const nativeAddon: NativeAddon = require(join(projectRoot, "build/Release/native_addon.node"));
+const nativeAddon: NativeAddon = require(join(projectRoot, "build/Release/gst_kit.node"));
 
 /**
  * https://gstreamer.freedesktop.org/documentation/gstreamer/gstbuffer.html?gi-language=c#GstBufferFlags

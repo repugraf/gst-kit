@@ -9,9 +9,9 @@ const __dirname = dirname(__filename);
 
 // Get the project root directory (one level up from __dirname)
 const projectRoot = join(__dirname, "..");
-const addonPath = join(projectRoot, "build/Release/native_addon.node");
+const addonPath = join(projectRoot, "build/Release/gst_kit.node");
 
 if (!existsSync(addonPath)) {
-  console.log("Native addon not found, building...");
+  console.log("GStreamer Kit native addon not found, building...");
   execSync("npm run build", { stdio: "inherit", cwd: projectRoot });
 }

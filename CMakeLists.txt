@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(native_addon)
+project(gst_kit)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -42,8 +42,8 @@ include_directories(
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 
-# Add library target
-add_library(native_addon SHARED
+# Add GStreamer Kit native addon library
+add_library(gst_kit_addon SHARED
     src/cpp/addon.cpp
     src/cpp/pipeline.cpp
     src/cpp/element.cpp
@@ -51,18 +51,19 @@ add_library(native_addon SHARED
     src/cpp/async-workers.cpp
 )
 
-# Set output name and properties
-set_target_properties(native_addon PROPERTIES
+# Set output name and properties (keep .node extension for Node.js compatibility)
+set_target_properties(gst_kit_addon PROPERTIES
     PREFIX ""
     SUFFIX ".node"
+    OUTPUT_NAME "gst_kit"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
     LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
 )
 
-# Link libraries
-target_link_libraries(native_addon
+# Link GStreamer and Node.js libraries
+target_link_libraries(gst_kit_addon
     ${CMAKE_JS_LIB}
     ${GSTREAMER_LIBRARIES}
     ${GSTREAMER_APP_LIBRARIES}
@@ -81,8 +82,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-# Add compile definitions
-target_compile_definitions(native_addon PRIVATE
+# Add compile definitions for Node.js addon
+target_compile_definitions(gst_kit_addon PRIVATE
     NAPI_CPP_EXCEPTIONS
     BUILDING_NODE_EXTENSION
 )
