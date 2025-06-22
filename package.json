@@ -1,5 +1,5 @@
 {
-  "name": "@gst/kit",
+  "name": "gst-kit",
   "version": "0.0.1",
   "type": "module",
   "exports": {
