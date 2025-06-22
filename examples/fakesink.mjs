@@ -7,7 +7,8 @@ const fakesink = pipeline.getElementByName("sink");
 pipeline.play();
 
 setTimeout(() => {
-  const sample = fakesink.getElementProperty("last-sample");
+  const sampleResult = fakesink.getElementProperty("last-sample");
+  const sample = sampleResult?.value;
   console.log("Got sample of: ", sample.buffer.length, "bytes. With caps: ", sample.caps);
   pipeline.stop();
 }, 1000);

@@ -291,6 +291,40 @@ namespace TypeConversion {
     return env.Undefined();
   };
 
+  Napi::Value gvalue_to_js_with_type(Napi::Env env, const GValue *gvalue) {
+    Napi::Value js_value = gvalue_to_js(env, gvalue);
+
+    if (js_value.IsNull()) {
+      return env.Null();
+    }
+    
+    // Create the standardized result object
+    Napi::Object result = Napi::Object::New(env);
+    
+    // Determine the type and set both type and value
+    if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean()) {
+      result.Set("type", Napi::String::New(env, "primitive"));
+    } else if (js_value.IsArray()) {
+      result.Set("type", Napi::String::New(env, "array"));
+    } else if (js_value.IsBuffer()) {
+      result.Set("type", Napi::String::New(env, "buffer"));
+    } else if (js_value.IsObject()) {
+      // Check if it's a GStreamer sample by looking for specific properties
+      Napi::Object obj = js_value.As<Napi::Object>();
+      if (obj.Has("buffer") && obj.Has("caps") && obj.Has("flags")) {
+        result.Set("type", Napi::String::New(env, "sample"));
+      } else {
+        result.Set("type", Napi::String::New(env, "object"));
+      }
+    } else {
+      // Default to primitive for unknown types
+      result.Set("type", Napi::String::New(env, "primitive"));
+    }
+    
+    result.Set("value", js_value);
+    return result;
+  }
+
   std::string get_conversion_error_message(GType target_type, const Napi::Value &js_value) {
     std::string js_type;
     if (js_value.IsString())

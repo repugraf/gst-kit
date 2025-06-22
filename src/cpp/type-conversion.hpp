@@ -26,6 +26,14 @@ namespace TypeConversion {
   Napi::Value gvalue_to_js(Napi::Env env, const GValue *gvalue);
 
   /**
+   * Convert a GValue to a standardized JavaScript object with type and value fields
+   * @param env N-API environment
+   * @param gvalue The GValue to convert
+   * @return Object with 'type' and 'value' fields, or null if the value is null
+   */
+  Napi::Value gvalue_to_js_with_type(Napi::Env env, const GValue *gvalue);
+
+  /**
    * Get a human-readable error message for type conversion failures
    * @param target_type The GType that conversion failed for
    * @param js_value The JavaScript value that couldn't be converted

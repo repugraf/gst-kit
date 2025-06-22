@@ -11,7 +11,9 @@ describe.concurrent("Element Properties", () => {
 
     const prop = element.getElementProperty("caps");
 
-    caps.split(",").forEach(cap => expect(prop).toContain(cap));
+    expect(prop).not.toBeNull();
+    expect(prop?.type).toBe("primitive");
+    caps.split(",").forEach(cap => expect(prop?.value).toContain(cap));
   });
 
   it("should set string property", () => {
@@ -25,8 +27,9 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("pattern", "ball");
     const newPattern = element.getElementProperty("pattern");
 
-    expect(newPattern).toBe("ball");
-    expect(newPattern).not.toBe(originalPattern);
+    expect(newPattern?.type).toBe("primitive");
+    expect(newPattern?.value).toBe("ball");
+    expect(newPattern?.value).not.toBe(originalPattern?.value);
   });
 
   it("should set boolean property", () => {
@@ -40,8 +43,9 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("is-live", true);
     const newIsLive = element.getElementProperty("is-live");
 
-    expect(newIsLive).toBe(true);
-    expect(newIsLive).not.toBe(originalIsLive);
+    expect(newIsLive?.type).toBe("primitive");
+    expect(newIsLive?.value).toBe(true);
+    expect(newIsLive?.value).not.toBe(originalIsLive?.value);
   });
 
   it("should set integer property", () => {
@@ -54,7 +58,8 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("num-buffers", 100);
     const numBuffers = element.getElementProperty("num-buffers");
 
-    expect(numBuffers).toBe(100);
+    expect(numBuffers?.type).toBe("primitive");
+    expect(numBuffers?.value).toBe(100);
   });
 
   it("should set caps property", () => {
@@ -68,9 +73,10 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("caps", capsString);
     const caps = element.getElementProperty("caps");
 
-    expect(caps).toContain("width=(int)640");
-    expect(caps).toContain("height=(int)480");
-    expect(caps).toContain("framerate=(fraction)30/1");
+    expect(caps?.type).toBe("primitive");
+    expect(caps?.value).toContain("width=(int)640");
+    expect(caps?.value).toContain("height=(int)480");
+    expect(caps?.value).toContain("framerate=(fraction)30/1");
   });
 
   it("should throw error for non-existent property", () => {
@@ -121,14 +127,16 @@ describe.concurrent("Element Properties", () => {
     const originalPattern = element.getElementProperty("pattern");
     element.setElementProperty("pattern", "ball");
     const newPattern = element.getElementProperty("pattern");
-    expect(newPattern).toBe("ball");
-    expect(newPattern).not.toBe(originalPattern);
+    expect(newPattern?.type).toBe("primitive");
+    expect(newPattern?.value).toBe("ball");
+    expect(newPattern?.value).not.toBe(originalPattern?.value);
 
     // 3. Property exists (already set) - should replace it with new value
     element.setElementProperty("pattern", "smpte");
     const replacedPattern = element.getElementProperty("pattern");
-    expect(replacedPattern).toBe("smpte");
-    expect(replacedPattern).not.toBe("ball");
+    expect(replacedPattern?.type).toBe("primitive");
+    expect(replacedPattern?.value).toBe("smpte");
+    expect(replacedPattern?.value).not.toBe("ball");
   });
 
   it("should handle numeric property replacement", () => {
@@ -139,11 +147,11 @@ describe.concurrent("Element Properties", () => {
 
     // Set initial value
     element.setElementProperty("num-buffers", 50);
-    expect(element.getElementProperty("num-buffers")).toBe(50);
+    expect(element.getElementProperty("num-buffers")?.value).toBe(50);
 
     // Replace with new value
     element.setElementProperty("num-buffers", 100);
-    expect(element.getElementProperty("num-buffers")).toBe(100);
+    expect(element.getElementProperty("num-buffers")?.value).toBe(100);
   });
 
   it("should set basic caps on capsfilter", () => {
@@ -157,9 +165,10 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("caps", capsString);
     const retrievedCaps = element.getElementProperty("caps");
 
-    expect(retrievedCaps).toContain("video/x-raw");
-    expect(retrievedCaps).toContain("width=(int)320");
-    expect(retrievedCaps).toContain("height=(int)240");
+    expect(retrievedCaps?.type).toBe("primitive");
+    expect(retrievedCaps?.value).toContain("video/x-raw");
+    expect(retrievedCaps?.value).toContain("width=(int)320");
+    expect(retrievedCaps?.value).toContain("height=(int)240");
   });
 
   it("should set complex caps with multiple parameters", () => {
@@ -173,11 +182,12 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("caps", capsString);
     const retrievedCaps = element.getElementProperty("caps");
 
-    expect(retrievedCaps).toContain("video/x-raw");
-    expect(retrievedCaps).toContain("format=(string)RGB");
-    expect(retrievedCaps).toContain("width=(int)640");
-    expect(retrievedCaps).toContain("height=(int)480");
-    expect(retrievedCaps).toContain("framerate=(fraction)25/1");
+    expect(retrievedCaps?.type).toBe("primitive");
+    expect(retrievedCaps?.value).toContain("video/x-raw");
+    expect(retrievedCaps?.value).toContain("format=(string)RGB");
+    expect(retrievedCaps?.value).toContain("width=(int)640");
+    expect(retrievedCaps?.value).toContain("height=(int)480");
+    expect(retrievedCaps?.value).toContain("framerate=(fraction)25/1");
   });
 
   it("should update caps with different formats", () => {
@@ -189,15 +199,17 @@ describe.concurrent("Element Properties", () => {
     // Set initial caps
     element.setElementProperty("caps", "video/x-raw,format=RGBA,width=800,height=600");
     let caps = element.getElementProperty("caps");
-    expect(caps).toContain("format=(string)RGBA");
-    expect(caps).toContain("width=(int)800");
+    expect(caps?.type).toBe("primitive");
+    expect(caps?.value).toContain("format=(string)RGBA");
+    expect(caps?.value).toContain("width=(int)800");
 
     // Update caps with different format and dimensions
     element.setElementProperty("caps", "video/x-raw,format=YUV420,width=1920,height=1080");
     caps = element.getElementProperty("caps");
-    expect(caps).toContain("format=(string)YUV420");
-    expect(caps).toContain("width=(int)1920");
-    expect(caps).toContain("height=(int)1080");
+    expect(caps?.type).toBe("primitive");
+    expect(caps?.value).toContain("format=(string)YUV420");
+    expect(caps?.value).toContain("width=(int)1920");
+    expect(caps?.value).toContain("height=(int)1080");
   });
 
   it("should set caps with fractional framerate", () => {
@@ -214,7 +226,8 @@ describe.concurrent("Element Properties", () => {
       element.setElementProperty("caps", capsString);
       const retrievedCaps = element.getElementProperty("caps");
 
-      expect(retrievedCaps).toContain(`framerate=(fraction)${framerate}`);
+      expect(retrievedCaps?.type).toBe("primitive");
+      expect(retrievedCaps?.value).toContain(`framerate=(fraction)${framerate}`);
     }
   });
 
@@ -240,8 +253,9 @@ describe.concurrent("Element Properties", () => {
     element.setElementProperty("caps", capsString);
     const retrievedCaps = element.getElementProperty("caps");
 
-    expect(retrievedCaps).toContain("audio/x-raw");
-    expect(retrievedCaps).toContain("rate=(int)44100");
-    expect(retrievedCaps).toContain("channels=(int)2");
+    expect(retrievedCaps?.type).toBe("primitive");
+    expect(retrievedCaps?.value).toContain("audio/x-raw");
+    expect(retrievedCaps?.value).toContain("rate=(int)44100");
+    expect(retrievedCaps?.value).toContain("channels=(int)2");
   });
 });

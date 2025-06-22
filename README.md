@@ -285,8 +285,12 @@ source?.setElementProperty('num-buffers', 100);
 filter?.setElementProperty('caps', 'video/x-raw,width=1280,height=720,framerate=30/1');
 
 // Get property values
-const pattern = source?.getElementProperty('pattern');
-const caps = filter?.getElementProperty('caps');
+const patternResult = source?.getElementProperty('pattern');
+const capsResult = filter?.getElementProperty('caps');
+
+// Access the actual values using the standardized format
+const pattern = patternResult?.value;
+const caps = capsResult?.value;
 ```
 
 ### Pad Manipulation
@@ -453,6 +457,63 @@ Available flags include:
 - `GST_BUFFER_FLAG_HEADER`: Buffer contains header information
 - And more...
 
+## Property System
+
+### Standardized Property Results
+
+The `getElementProperty()` method returns a standardized object with type information:
+
+```javascript
+// Property result format
+const result = element.getElementProperty('property-name');
+
+if (result === null) {
+  console.log('Property value is null');
+} else {
+  console.log('Property type:', result.type);  // "primitive" | "array" | "object" | "buffer" | "sample"
+  console.log('Property value:', result.value); // The actual value
+}
+```
+
+### Property Types
+
+- **`primitive`**: Strings, numbers, booleans, enums
+- **`array`**: Arrays of values
+- **`object`**: GStreamer structures (like stats)
+- **`buffer`**: Raw binary data
+- **`sample`**: Media samples with buffer, caps, and metadata
+
+### Usage Examples
+
+```javascript
+// String property
+const patternResult = videotestsrc.getElementProperty('pattern');
+if (patternResult?.type === 'primitive') {
+  console.log('Pattern:', patternResult.value); // e.g., "ball"
+}
+
+// Boolean property
+const isLiveResult = videotestsrc.getElementProperty('is-live');
+if (isLiveResult?.type === 'primitive') {
+  console.log('Is live:', isLiveResult.value); // true/false
+}
+
+// Structure/Object property (like stats)
+const statsResult = rtpdepay.getElementProperty('stats');
+if (statsResult?.type === 'object') {
+  const stats = statsResult.value;
+  console.log('RTP timestamp:', stats.timestamp);
+}
+
+// Sample property
+const sampleResult = fakesink.getElementProperty('last-sample');
+if (sampleResult?.type === 'sample') {
+  const sample = sampleResult.value;
+  console.log('Buffer size:', sample.buffer.length);
+  console.log('Caps:', sample.caps);
+}
+```
+
 ## API Reference
 
 ### Pipeline Class
@@ -486,7 +547,7 @@ class Pipeline {
 // Base element with common functionality
 interface Element {
   readonly type: "element"
-  getElementProperty(key: string): GStreamerPropertyReturnValue
+  getElementProperty(key: string): GStreamerPropertyResult
   setElementProperty(key: string, value: GStreamerPropertyValue): void
   addPadProbe(padName: string, callback: (bufferData: BufferData) => void): () => void
   setPad(attribute: string, padName: string): void

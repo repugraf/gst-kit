@@ -13,14 +13,16 @@ describe.concurrent("RTP Statistics", () => {
 
     await pipeline.play();
 
-    const stats = depayloader.getElementProperty("stats");
+    const statsResult = depayloader.getElementProperty("stats");
 
     pipeline.stop();
 
-    expect(stats).toBeDefined();
-    expect(stats).not.toBeNull();
+    expect(statsResult).toBeDefined();
+    expect(statsResult).not.toBeNull();
+    expect(statsResult?.type).toBe("object");
 
     // Check if stats is an object (GstStructure converted to JS object)
+    const stats = statsResult?.value;
     expect(typeof stats).toBe("object");
 
     if (stats && typeof stats === "object") {
@@ -66,7 +68,7 @@ describe.concurrent("RTP Statistics", () => {
     // Wait a bit more for stats to accumulate
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const stats = depayloader.getElementProperty("stats");
+    const statsResult = depayloader.getElementProperty("stats");
 
     pipeline.stop();
 
@@ -76,8 +78,9 @@ describe.concurrent("RTP Statistics", () => {
     expect(typeof padProbeRtpData.sequence).toBe("number");
 
     // Verify stats property returns data
-    expect(stats).toBeDefined();
-    expect(stats).not.toBeNull();
+    expect(statsResult).toBeDefined();
+    expect(statsResult).not.toBeNull();
+    expect(statsResult?.type).toBe("object");
   });
 
   it("should handle different types of stats properties", async () => {
@@ -89,14 +92,16 @@ describe.concurrent("RTP Statistics", () => {
 
     await pipeline.play();
 
-    const stats = sink.getElementProperty("stats");
+    const statsResult = sink.getElementProperty("stats");
 
     pipeline.stop();
 
     // fakesink has stats but different type (basesink stats, not RTP depayload stats)
-    expect(stats).toBeDefined();
-    expect(stats).not.toBeNull();
+    expect(statsResult).toBeDefined();
+    expect(statsResult).not.toBeNull();
+    expect(statsResult?.type).toBe("object");
 
+    const stats = statsResult?.value;
     if (stats && typeof stats === "object") {
       const statsObj = stats as any;
       expect(statsObj.name).not.toBe("application/x-rtp-depayload-stats");

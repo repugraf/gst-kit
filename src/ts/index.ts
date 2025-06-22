@@ -57,6 +57,14 @@ export type GStreamerPropertyReturnValue =
   | GStreamerSample
   | null;
 
+export type GStreamerPropertyResult =
+  | { type: "primitive"; value: GStreamerPropertyValue }
+  | { type: "array"; value: GStreamerPropertyValue[] }
+  | { type: "object"; value: Record<string, GStreamerPropertyValue> }
+  | { type: "buffer"; value: Buffer }
+  | { type: "sample"; value: GStreamerSample }
+  | null;
+
 // State change result returned by play(), pause(), and stop()
 export type StateChangeResult = {
   result: "success" | "async" | "no-preroll" | "failure" | "unknown";
@@ -102,7 +110,7 @@ export type BufferData = {
 };
 
 type ElementBase = {
-  getElementProperty: (key: string) => GStreamerPropertyReturnValue;
+  getElementProperty: (key: string) => GStreamerPropertyResult;
   setElementProperty: (key: string, value: GStreamerPropertyValue) => void;
   addPadProbe: (padName: string, callback: (bufferData: BufferData) => void) => () => void;
   setPad: (attribute: string, padName: string) => void;

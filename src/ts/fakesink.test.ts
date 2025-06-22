@@ -11,16 +11,19 @@ describe.concurrent("FakeSink", () => {
     await pipeline.play();
 
     // Get the last sample
-    const sample = fakesink.getElementProperty("last-sample") as GStreamerSample;
+    const sampleResult = fakesink.getElementProperty("last-sample");
 
     pipeline.stop();
 
-    expect(sample).not.toBeNull();
+    expect(sampleResult).not.toBeNull();
+    expect(sampleResult?.type).toBe("sample");
+
+    const sample = sampleResult?.value as GStreamerSample;
     expect(sample).toHaveProperty("buffer");
     expect(sample).toHaveProperty("caps");
     expect(sample).toHaveProperty("flags");
 
-    if (sample && typeof sample === "object" && "buf" in sample && "caps" in sample) {
+    if (sample && typeof sample === "object" && "buffer" in sample && "caps" in sample) {
       expect(sample.buffer).toBeInstanceOf(Buffer);
       expect(sample.buffer?.length).toBeGreaterThan(0);
       expect(sample.caps).toHaveProperty("name");
@@ -40,11 +43,11 @@ describe.concurrent("FakeSink", () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Try to get the last sample (should be null since it's disabled)
-    const sample = fakesink.getElementProperty("last-sample");
+    const sampleResult = fakesink.getElementProperty("last-sample");
 
     pipeline.stop();
 
-    expect(sample).toBeNull();
+    expect(sampleResult).toBeNull();
   });
 
   it("should handle pipeline state changes correctly", async () => {
@@ -77,14 +80,17 @@ describe.concurrent("FakeSink", () => {
     // Wait for all buffers to be processed
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const sample = fakesink.getElementProperty("last-sample");
+    const sampleResult = fakesink.getElementProperty("last-sample");
 
     pipeline.stop();
 
-    expect(sample).not.toBeNull();
-    if (sample && typeof sample === "object" && "buf" in sample) {
-      expect((sample as any).buf).toBeInstanceOf(Buffer);
-      expect((sample as any).buf.length).toBeGreaterThan(0);
+    expect(sampleResult).not.toBeNull();
+    expect(sampleResult?.type).toBe("sample");
+
+    const sample = sampleResult?.value as GStreamerSample;
+    if (sample && typeof sample === "object" && "buffer" in sample) {
+      expect(sample.buffer).toBeInstanceOf(Buffer);
+      expect(sample.buffer?.length).toBeGreaterThan(0);
     }
   });
 
@@ -100,11 +106,14 @@ describe.concurrent("FakeSink", () => {
 
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const sample = fakesink.getElementProperty("last-sample") as GStreamerSample;
+    const sampleResult = fakesink.getElementProperty("last-sample");
 
     pipeline.stop();
 
-    expect(sample).not.toBeNull();
+    expect(sampleResult).not.toBeNull();
+    expect(sampleResult?.type).toBe("sample");
+
+    const sample = sampleResult?.value as GStreamerSample;
     if (sample && typeof sample === "object" && "caps" in sample) {
       const caps = sample.caps;
       expect(caps?.name).toContain("video/x-raw");

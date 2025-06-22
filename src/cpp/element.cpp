@@ -124,7 +124,7 @@ Napi::Value Element::get_element_property(const Napi::CallbackInfo &info) {
   g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(spec));
   g_object_get_property(G_OBJECT(element.get()), property_name.c_str(), &value);
 
-  Napi::Value result = TypeConversion::gvalue_to_js(env, &value);
+  Napi::Value result = TypeConversion::gvalue_to_js_with_type(env, &value);
 
   g_value_unset(&value);
   return result;

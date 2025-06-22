@@ -1,12 +1,12 @@
 {
   "name": "gst-kit",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/cjs/index.cjs"
     }
   },
   "types": "./dist/index.d.ts",

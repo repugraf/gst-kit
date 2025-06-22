@@ -15,7 +15,8 @@ while (true) {
   const sample = await appsink.getSample();
 
   if (sample?.buffer) {
-    const stats = depay.getElementProperty("stats");
+    const statsResult = depay.getElementProperty("stats");
+    const stats = statsResult?.value;
     console.log(`Frame size = ${sample.buffer.length}; rtp-timestamp = ${stats?.timestamp}`);
   } else {
     console.log("No Frame received. Stopping pipeline...");
