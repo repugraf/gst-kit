@@ -19,11 +19,17 @@ find_path(NODE_ADDON_API_DIR
     PATHS 
         ${CMAKE_JS_INC}
         ${CMAKE_CURRENT_SOURCE_DIR}/node_modules/node-addon-api
+        ${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/node-addon-api
     NO_DEFAULT_PATH
 )
 
 if(NOT NODE_ADDON_API_DIR)
-    message(FATAL_ERROR "node-addon-api not found. Please run 'npm install' first.")
+    message(FATAL_ERROR "node-addon-api not found. Please ensure dependencies are installed:\n"
+                        "  npm install\n"
+                        "Searched in:\n"
+                        "  - ${CMAKE_JS_INC}\n"
+                        "  - ${CMAKE_CURRENT_SOURCE_DIR}/node_modules/node-addon-api\n"
+                        "  - ${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/node-addon-api")
 endif()
 
 # Include directories

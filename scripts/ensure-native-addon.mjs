@@ -10,8 +10,31 @@ const __dirname = dirname(__filename);
 // Get the project root directory (one level up from __dirname)
 const projectRoot = join(__dirname, "..");
 const addonPath = join(projectRoot, "build/Release/gst_kit.node");
+const nodeModulesPath = join(projectRoot, "node_modules");
+const nodeAddonApiPath = join(nodeModulesPath, "node-addon-api");
 
 if (!existsSync(addonPath)) {
   console.log("GStreamer Kit native addon not found, building...");
-  execSync("npm run build", { stdio: "inherit", cwd: projectRoot });
+
+  // Check if dependencies are installed
+  if (!existsSync(nodeModulesPath) || !existsSync(nodeAddonApiPath)) {
+    console.log("Dependencies not found, installing...");
+    try {
+      execSync("npm install", { stdio: "inherit", cwd: projectRoot });
+    } catch (error) {
+      console.error("Failed to install dependencies:", error.message);
+      process.exit(1);
+    }
+  }
+
+  try {
+    execSync("npm run build", { stdio: "inherit", cwd: projectRoot });
+  } catch (error) {
+    console.error("Failed to build native addon:", error.message);
+    console.error("Make sure you have the required system dependencies:");
+    console.error("- GStreamer development libraries");
+    console.error("- CMake");
+    console.error("- A C++ compiler");
+    process.exit(1);
+  }
 }
