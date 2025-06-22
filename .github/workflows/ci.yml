@@ -51,16 +51,5 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: npm run test:bun
     
-    # Deno tests are disabled on Windows due to issues with native module loading
-    - name: Setup Deno
-      if: matrix.os != 'windows-latest'
-      uses: denoland/setup-deno@v1
-      with:
-        deno-version: latest
-    
-    - name: Run Deno tests
-      if: matrix.os != 'windows-latest'
-      run: npm run test:deno
-    
     - name: Run unit tests
       run: npm run test:unit

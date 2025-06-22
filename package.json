@@ -16,7 +16,6 @@
     "build": "npm run clean && npm run build:native && npm run build:ts",
     "test:node": "node modules/common.cjs && node modules/esm.mjs",
     "test:bun": "bun modules/common.cjs && bun modules/esm.mjs",
-    "test:deno": "deno run -A modules/esm.mjs",
     "test:unit": "vitest --no-watch",
     "test": "npm run test:node && npm run test:unit",
     "postinstall": "node scripts/ensure-native-addon.js",

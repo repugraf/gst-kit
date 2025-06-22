@@ -34,11 +34,21 @@ This will:
 
 ## Testing
 
-Confirm library is working in both CJS, EMS and unit tests are passing:
+Confirm library is working in both CommonJS, ESM and unit tests are passing:
 
 ```bash
 npm run test
 ```
+
+### Runtime Support
+
+This library supports the following JavaScript runtimes:
+
+- **Node.js** ✅ (Full support)
+- **Bun** ✅ (Full support)
+- **Deno** ❌ (Not supported - Deno cannot load native Node.js addons)
+
+> **Note**: Native addons (`.node` files) require Node.js or Bun. Deno's FFI system cannot provide the NAPI runtime environment needed for native GStreamer bindings.
 
 ## Project Structure
 
@@ -47,7 +57,7 @@ npm run test
   - `add.cpp` and `add.hpp` - Native C++ code
 - `src/ts/` - TypeScript source code
   - `index.ts` - TypeScript interface for the native addon
-- `modules/` - Assertion tests of dist for both CJS and ESM
+- `modules/` - Assertion tests of dist for both CommonJS and ESM
 - `CMakeLists.txt` - CMake configuration
 - `tsconfig.json` - TypeScript configuration
 - `package.json` - Project configuration and dependencies
@@ -239,9 +249,9 @@ if (encoder && payloader) {
 
 ## Requirements
 
-- Node.js 16 or higher
-- GStreamer 1.14 or higher
-- CMake 3.15 or higher
+- **Runtime**: Node.js 16+ or Bun 1.0+ (Deno is not supported)
+- **System**: GStreamer 1.14 or higher
+- **Build**: CMake 3.15 or higher
 
 ## License
 
