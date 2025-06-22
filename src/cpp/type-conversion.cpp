@@ -200,6 +200,10 @@ namespace TypeConversion {
           g_free(caps_str);
           return result;
         }
+      } else if (boxed_value && GST_IS_STRUCTURE(boxed_value)) {
+        // Handle GstStructure (like stats property)
+        const GstStructure *structure = GST_STRUCTURE(boxed_value);
+        return gst_structure_to_js(env, structure);
       }
     }
 
@@ -301,6 +305,44 @@ namespace TypeConversion {
       }
       result.Set("caps", caps_obj);
     }
+
+    return result;
+  }
+
+  Napi::Object gst_structure_to_js(Napi::Env env, const GstStructure *structure) {
+    if (!structure) {
+      return Napi::Object::New(env);
+    }
+
+    Napi::Object result = Napi::Object::New(env);
+
+    // Add structure name
+    const gchar *name = gst_structure_get_name(structure);
+    if (name) {
+      result.Set("name", Napi::String::New(env, name));
+    }
+
+    // Add individual structure fields
+    auto callback_data = std::make_pair(env, &result);
+    gst_structure_foreach(
+      structure,
+      [](GQuark field_id, const GValue *value, gpointer user_data) -> gboolean {
+        auto *data = static_cast<std::pair<Napi::Env, Napi::Object *> *>(user_data);
+        Napi::Env env = data->first;
+        Napi::Object *obj = data->second;
+
+        const char *field_name = g_quark_to_string(field_id);
+        try {
+          Napi::Value js_value = gvalue_to_js(env, value);
+          obj->Set(field_name, js_value);
+        } catch (...) {
+          // Skip fields that can't be converted
+        }
+
+        return TRUE;
+      },
+      &callback_data
+    );
 
     return result;
   }

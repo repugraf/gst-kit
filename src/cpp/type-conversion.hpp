@@ -40,4 +40,12 @@ namespace TypeConversion {
    * @return JavaScript object with sample data
    */
   Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample);
+
+  /**
+   * Convert a GstStructure to a JavaScript object
+   * @param env N-API environment
+   * @param structure The GstStructure to convert
+   * @return JavaScript object with structure data
+   */
+  Napi::Object gst_structure_to_js(Napi::Env env, const GstStructure *structure);
 }
