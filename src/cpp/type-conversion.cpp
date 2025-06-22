@@ -99,6 +99,48 @@ namespace TypeConversion {
             g_value_unset(out_value);
             return false;
           }
+        } else if (G_TYPE_IS_FLAGS(target_type)) {
+          // Handle flags types
+          if (js_value.IsString()) {
+            std::string flags_str = js_value.As<Napi::String>().Utf8Value();
+            GFlagsClass *flags_class = G_FLAGS_CLASS(g_type_class_ref(target_type));
+            guint flags_value = 0;
+            
+            // Try to parse the string as flag names
+            gchar **flag_names = g_strsplit(flags_str.c_str(), "+", -1);
+            gboolean success = TRUE;
+            
+            for (gint i = 0; flag_names[i] != NULL; i++) {
+              g_strstrip(flag_names[i]); // Remove whitespace
+              GFlagsValue *flag_val = g_flags_get_value_by_nick(flags_class, flag_names[i]);
+              if (!flag_val) {
+                flag_val = g_flags_get_value_by_name(flags_class, flag_names[i]);
+              }
+              if (flag_val) {
+                flags_value |= flag_val->value;
+              } else {
+                success = FALSE;
+                break;
+              }
+            }
+            
+            g_strfreev(flag_names);
+            g_type_class_unref(flags_class);
+            
+            if (success) {
+              g_value_set_flags(out_value, flags_value);
+              return true;
+            } else {
+              g_value_unset(out_value);
+              return false;
+            }
+          } else if (js_value.IsNumber()) {
+            g_value_set_flags(out_value, js_value.As<Napi::Number>().Uint32Value());
+            return true;
+          } else {
+            g_value_unset(out_value);
+            return false;
+          }
         } else {
           // For other types, try to convert from string if possible
           if (js_value.IsString() && g_value_type_transformable(G_TYPE_STRING, target_type)) {
@@ -179,6 +221,41 @@ namespace TypeConversion {
         g_type_class_unref(enum_class);
         return Napi::Number::New(env, enum_val);
       }
+    } else if (G_TYPE_IS_FLAGS(G_VALUE_TYPE(gvalue))) {
+      guint flags_val = g_value_get_flags(gvalue);
+      GFlagsClass *flags_class = G_FLAGS_CLASS(g_type_class_ref(G_VALUE_TYPE(gvalue)));
+      
+      // Manual flags to string conversion
+      std::string flags_str = "";
+      if (flags_val == 0) {
+        flags_str = "none";
+      } else {
+        for (guint i = 0; i < flags_class->n_values; i++) {
+          GFlagsValue *flag_val = &flags_class->values[i];
+          if (flag_val->value != 0 && (flags_val & flag_val->value) == flag_val->value) {
+            if (!flags_str.empty()) {
+              flags_str += "+";
+            }
+            if (flag_val->value_nick) {
+              flags_str += flag_val->value_nick;
+            } else if (flag_val->value_name) {
+              flags_str += flag_val->value_name;
+            } else {
+              flags_str += std::to_string(flag_val->value);
+            }
+          }
+        }
+      }
+      
+      if (!flags_str.empty()) {
+        Napi::Value result = Napi::String::New(env, flags_str);
+        g_type_class_unref(flags_class);
+        return result;
+      } else {
+        // Fall back to numeric value
+        g_type_class_unref(flags_class);
+        return Napi::Number::New(env, flags_val);
+      }
     }
 
     // Handle GstFraction values
@@ -246,6 +323,8 @@ namespace TypeConversion {
           return "Expected string value for caps property, got " + js_type;
         } else if (G_TYPE_IS_ENUM(target_type)) {
           return "Expected string or number value for enum property, got " + js_type;
+        } else if (G_TYPE_IS_FLAGS(target_type)) {
+          return "Expected string or number value for flags property, got " + js_type;
         } else {
           return "Cannot convert " + js_type + " to " + std::string(g_type_name(target_type));
         }
@@ -295,8 +374,12 @@ namespace TypeConversion {
             Napi::Object *obj = data->second;
 
             const char *field_name = g_quark_to_string(field_id);
-            Napi::Value js_value = gvalue_to_js(env, value);
-            obj->Set(field_name, js_value);
+            try {
+              Napi::Value js_value = gvalue_to_js(env, value);
+              obj->Set(field_name, js_value);
+            } catch (...) {
+              // Skip fields that can't be converted
+            }
 
             return TRUE;
           },

@@ -52,6 +52,7 @@ export type GstMessage = {
 export type GStreamerPropertyReturnValue =
   | GStreamerPropertyValue
   | GStreamerPropertyValue[]
+  | Record<string, GStreamerPropertyValue>
   | Buffer
   | GStreamerSample
   | null;
