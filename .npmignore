@@ -4,7 +4,10 @@
 .vscode/
 node_modules/
 build/
-dist/
+
+# TypeScript configuration files (source files are shipped for debugging)
+tsconfig.json
+rollup.config.mjs
 
 # Configuration files
 .gitignore

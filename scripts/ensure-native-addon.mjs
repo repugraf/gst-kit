@@ -28,7 +28,7 @@ if (!existsSync(addonPath)) {
   }
 
   try {
-    execSync("npm run build", { stdio: "inherit", cwd: projectRoot });
+    execSync("npm run build:native", { stdio: "inherit", cwd: projectRoot });
   } catch (error) {
     console.error("Failed to build native addon:", error.message);
     console.error("Make sure you have the required system dependencies:");
