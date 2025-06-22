@@ -55,5 +55,8 @@
     "eslint": "9.28.0",
     "prettier": "3.5.3",
     "vitest": "3.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
