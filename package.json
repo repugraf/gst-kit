@@ -1,6 +1,6 @@
 {
   "name": "gst-kit",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "exports": {
     ".": {
@@ -9,6 +9,7 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf build dist",
     "build:native": "cmake-js compile",
