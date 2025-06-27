@@ -28,11 +28,39 @@ jobs:
       with:
         cmake-version: 'latest'
     
+    - name: Install GStreamer dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgstreamer1.0-dev \
+          libgstreamer-plugins-base1.0-dev \
+          libgstreamer-plugins-bad1.0-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav \
+          pkg-config
+    
+    - name: Install GStreamer dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
+    
     - name: Setup Visual Studio Build Tools
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
+    
+    - name: Install GStreamer dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Install GStreamer using chocolatey
+        choco install gstreamer -y
+        choco install gstreamer-devel -y
+      shell: cmd
     
     - name: Install dependencies
       run: npm ci
