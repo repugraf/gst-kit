@@ -84,7 +84,7 @@ if (sink?.type === 'app-sink-element') {
   while (true) {
     const sample = await sink.getSample(); // Explicitly request samples
     if (!sample) break;
-    
+  
     console.log('Received frame:', sample.buffer?.length, 'bytes');
   }
   
@@ -107,7 +107,7 @@ if (sink?.type === 'app-sink-element') {
   const unsubscribe = sink.onSample((sample) => {
     frameCount++;
     console.log(`Frame ${frameCount}:`, sample.buffer?.length, 'bytes');
-    
+  
     if (frameCount === 10) {
       unsubscribe();
       pipeline.stop();
@@ -158,20 +158,20 @@ if (payloader) {
       // Raw buffer data
       buffer: bufferData.buffer, // Buffer object with raw data
       size: bufferData.buffer?.length, // Buffer size in bytes
-      
+  
       // Timing information (nanoseconds)
       pts: bufferData.pts,       // Presentation timestamp
       dts: bufferData.dts,       // Decode timestamp
       duration: bufferData.duration,
       offset: bufferData.offset,
       offsetEnd: bufferData.offsetEnd,
-      
+  
       // Buffer metadata
       flags: bufferData.flags,   // GStreamer buffer flags
-      
+  
       // Stream format information
       caps: bufferData.caps,     // Caps object with format details
-      
+  
       // RTP data (only for RTP streams)
       rtp: bufferData.rtp ? {
         timestamp: bufferData.rtp.timestamp,
@@ -255,7 +255,7 @@ while (true) {
   
   if (message) {
     console.log('Message:', message.type, message.srcElementName);
-    
+  
     if (message.type === 'eos') {
       console.log('End of stream');
       break;
@@ -577,13 +577,12 @@ interface AppSrcElement extends Element {
 
 ## Runtime Compatibility
 
-| Runtime | Support Level | Notes |
-|---------|---------------|-------|
-| Node.js 16+ | ✅ Full | Primary target, all features |
-| Node.js 18+ | ✅ Full | Recommended version |
-| Node.js 20+ | ✅ Full | Latest stable support |
-| Bun 1.0+ | ✅ Full | Alternative runtime support |
-| Deno | ❌ Not supported | Native module limitations |
+| Runtime     | Support Level    | Notes                       |
+| ----------- | ---------------- | --------------------------- |
+| Node.js 16+ | ✅ Full          | Minimal version             |
+| Node.js 22+ | ✅ Full          | Latest stable support       |
+| Bun 1.0+    | ✅ Full          | Alternative runtime support |
+| Deno        | ❌ Not supported | Native module limitations   |
 
 ## License
 

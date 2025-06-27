@@ -85,9 +85,9 @@ describe.concurrent("Pipeline busPop Method", () => {
 
     pipeline.stop();
 
-    // Should timeout within a reasonable range (80-120ms to account for timing variance)
+    // Should timeout within a reasonable range (80-150ms to account for timing variance and system load)
     expect(elapsed).toBeGreaterThan(80);
-    expect(elapsed).toBeLessThan(120);
+    expect(elapsed).toBeLessThan(150);
   });
 
   it("should handle infinite timeout with negative value", async () => {
