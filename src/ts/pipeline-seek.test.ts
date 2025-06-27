@@ -18,10 +18,7 @@ describe.concurrent("Pipeline Seek Method", () => {
 
     // Check if position is valid (should be close to seek position since we paused)
     const position = pipeline.queryPosition();
-    if (position !== -1) {
-      expect(position).toBeGreaterThan(1.0);
-      expect(position).toBeLessThan(3.0); // Tighter bound since we paused
-    }
+    expect(position).toBeCloseTo(2.0, 1);
 
     await pipeline.stop();
   });
@@ -39,11 +36,7 @@ describe.concurrent("Pipeline Seek Method", () => {
     await pipeline.pause();
 
     const position = pipeline.queryPosition();
-    // Accept either a valid position near 0 or -1 (query failed)
-    if (position !== -1) {
-      expect(position).toBeGreaterThanOrEqual(0);
-      expect(position).toBeLessThan(1.0);
-    }
+    expect(position).toBeCloseTo(0, 1);
 
     await pipeline.stop();
   });
@@ -87,39 +80,27 @@ describe.concurrent("Pipeline Seek Method", () => {
     );
 
     await pipeline.play();
-
-    // Let it play for a bit to have some content
-    await new Promise(resolve => setTimeout(resolve, 50));
-
     await pipeline.pause();
 
     // Seek while paused to 1.5 seconds
     const seekResult = pipeline.seek(1.5);
     expect(seekResult).toBe(true);
 
+    await pipeline.play();
+    await pipeline.pause();
+
     // Check position while still paused (should be close to 1.5 seconds)
     const pausedPosition = pipeline.queryPosition();
-    if (pausedPosition !== -1) {
-      expect(pausedPosition).toBeGreaterThan(0.8);
-      expect(pausedPosition).toBeLessThan(2.2);
-    }
+    expect(pausedPosition).toBeCloseTo(1.5, 1);
 
     // Now test that resuming works correctly
     await pipeline.play();
-
-    // Give it a moment to play
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Pause again to check position
+    await new Promise(resolve => setTimeout(resolve, 30));
     await pipeline.pause();
 
     const resumedPosition = pipeline.queryPosition();
-    // Position should still be reasonable (close to where we seeked)
-    // More lenient upper bound to account for platform timing differences
-    if (resumedPosition !== -1) {
-      expect(resumedPosition).toBeGreaterThan(0.8);
-      expect(resumedPosition).toBeLessThan(4.0);
-    }
+
+    expect(resumedPosition).toBeCloseTo(1.53, 1);
 
     await pipeline.stop();
   });
