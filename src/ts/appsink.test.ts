@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample } from ".";
+import { arePluginsAvailable } from "./test-utils";
 
 describe.concurrent("AppSink", () => {
   it("should pull frames", async () => {
@@ -18,23 +19,26 @@ describe.concurrent("AppSink", () => {
     expect(result?.buffer).toBeDefined();
   });
 
-  it("should return null on pull if no frames received", async () => {
-    const pipeline = new Pipeline(
-      "udpsrc address=127.0.0.1 port=5004 ! queue " +
-        "! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink name=sink"
-    );
-    const sink = pipeline.getElementByName("sink");
+  it.skipIf(!arePluginsAvailable(["rtph264depay", "h264parse", "avdec_h264"]))(
+    "should return null on pull if no frames received",
+    async () => {
+      const pipeline = new Pipeline(
+        "udpsrc address=127.0.0.1 port=5004 ! queue " +
+          "! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink name=sink"
+      );
+      const sink = pipeline.getElementByName("sink");
 
-    if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
+      if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
 
-    await pipeline.play(10);
+      await pipeline.play(10);
 
-    const result = await sink.getSample(10);
+      const result = await sink.getSample(10);
 
-    pipeline.stop();
+      pipeline.stop();
 
-    expect(result).toBeNull();
-  });
+      expect(result).toBeNull();
+    }
+  );
 
   it("should return null if pipeline not started", async () => {
     const pipeline = new Pipeline("videotestsrc ! videoconvert ! appsink name=sink");

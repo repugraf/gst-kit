@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
+import { isWindows } from "./test-utils";
 
 describe.concurrent("Pipeline busPop Method", () => {
   it("should return null when no message available with timeout", async () => {
@@ -85,9 +86,11 @@ describe.concurrent("Pipeline busPop Method", () => {
 
     pipeline.stop();
 
-    // Should timeout within a reasonable range (80-150ms to account for timing variance and system load)
+    // Should timeout within a reasonable range (timing varies by platform)
     expect(elapsed).toBeGreaterThan(80);
-    expect(elapsed).toBeLessThan(150);
+    // Windows has higher async overhead, so use more tolerant bounds
+    const upperBound = isWindows ? 250 : 150;
+    expect(elapsed).toBeLessThan(upperBound);
   });
 
   it("should handle infinite timeout with negative value", async () => {
