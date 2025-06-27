@@ -47,6 +47,10 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
+        # Set environment variables for GStreamer library paths
+        echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$(brew --prefix)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
     
     - name: Setup Visual Studio Build Tools
       if: matrix.os == 'windows-latest'
@@ -64,8 +68,8 @@ jobs:
     
     - name: Install dependencies
       run: npm ci
-
-    - name: Build
+    
+    - name: Build project
       run: npm run build
     
     - name: Run Node.js tests
