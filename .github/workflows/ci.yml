@@ -28,6 +28,140 @@ jobs:
       with:
         cmake-version: 'latest'
     
+    - name: Cache GStreamer on Windows
+      if: matrix.os == 'windows-latest'
+      id: cache-gstreamer-windows
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\Program Files\gstreamer
+          downloads
+        key: gstreamer-windows-${{ matrix.node-version }}-1.26.2-${{ runner.arch }}
+        restore-keys: |
+          gstreamer-windows-${{ matrix.node-version }}-1.26.2-
+          gstreamer-windows-${{ matrix.node-version }}-
+          gstreamer-windows-
+    
+    - name: Install Windows dependencies
+      if: matrix.os == 'windows-latest' && steps.cache-gstreamer-windows.outputs.cache-hit != 'true'
+      run: |
+        Write-Host "Installing pkg-config..."
+        choco install pkgconfiglite -y
+      shell: powershell
+
+    - name: Install GStreamer on Windows
+      if: matrix.os == 'windows-latest' && steps.cache-gstreamer-windows.outputs.cache-hit != 'true'
+      run: |
+        Write-Host "Installing GStreamer..."
+        
+        # Detect architecture dynamically
+        $arch = if ([Environment]::Is64BitProcess) {
+          if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            "arm64"
+          } else {
+            "x86_64"
+          }
+        } else {
+          "x86"
+        }
+        
+        Write-Host "Detected architecture: $arch"
+        
+        # Create download directory
+        if (!(Test-Path "downloads")) {
+          New-Item -ItemType Directory -Name "downloads"
+        }
+        
+        # Set download URLs based on architecture
+        $gstreamerVersion = "1.26.2"
+        $baseUrl = "https://gstreamer.freedesktop.org/data/pkg/windows/$gstreamerVersion/msvc"
+        $devMsiUrl = "$baseUrl/gstreamer-1.0-devel-msvc-$arch-$gstreamerVersion.msi"
+        $runtimeMsiUrl = "$baseUrl/gstreamer-1.0-msvc-$arch-$gstreamerVersion.msi"
+        
+        Write-Host "Downloading GStreamer for $arch architecture..."
+        Write-Host "Runtime URL: $runtimeMsiUrl"
+        Write-Host "Development URL: $devMsiUrl"
+        
+        # Download GStreamer runtime MSI
+        Invoke-WebRequest -Uri $runtimeMsiUrl -OutFile "downloads\gstreamer-runtime.msi"
+        Write-Host "Downloaded runtime MSI"
+        
+        # Download GStreamer development MSI
+        Invoke-WebRequest -Uri $devMsiUrl -OutFile "downloads\gstreamer-devel.msi"
+        Write-Host "Downloaded development MSI"
+        
+        # Install runtime MSI
+        Write-Host "Installing runtime MSI..."
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "downloads\gstreamer-runtime.msi", "/quiet", "/norestart" -Wait
+        
+        # Install development MSI
+        Write-Host "Installing development MSI..."
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "downloads\gstreamer-devel.msi", "/quiet", "/norestart" -Wait
+        
+        Write-Host "GStreamer installation completed"
+      shell: powershell
+    
+    - name: Setup Windows GStreamer environment
+      if: matrix.os == 'windows-latest'
+      run: |
+        Write-Host "Setting up environment variables..."
+        
+        # Detect architecture dynamically
+        $arch = if ([Environment]::Is64BitProcess) {
+          if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            "arm64"
+          } else {
+            "x86_64"
+          }
+        } else {
+          "x86"
+        }
+        
+        Write-Host "Detected architecture: $arch"
+        
+        # Set architecture-specific paths
+        $gstreamerPath = "C:\Program Files\gstreamer\1.0\msvc_$arch"
+        $envVarName = "GSTREAMER_1_0_ROOT_MSVC_$($arch.ToUpper().Replace('_', '_'))"
+        
+        Write-Host "Using GStreamer path: $gstreamerPath"
+        Write-Host "Environment variable: $envVarName"
+        
+        # Set environment variables for GStreamer 1.26+ (new installation path)
+        echo "$gstreamerPath\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "PKG_CONFIG_PATH=$gstreamerPath\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "$envVarName=$gstreamerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+        # Add additional environment variables to help CMake find libraries
+        echo "GSTREAMER_ROOT=$gstreamerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "CMAKE_PREFIX_PATH=$gstreamerPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+        Write-Host "Verifying installation..."
+        if (Test-Path "$gstreamerPath\bin\gst-launch-1.0.exe") {
+          Write-Host "GStreamer installation verified successfully"
+        } else {
+          Write-Warning "GStreamer installation may not be complete - gst-launch-1.0.exe not found at $gstreamerPath\bin"
+        }
+        
+        Write-Host "Debugging pkg-config output..."
+        # Debug what pkg-config returns
+        if (Test-Path "$gstreamerPath\bin\pkg-config.exe") {
+          & "$gstreamerPath\bin\pkg-config.exe" --cflags gstreamer-1.0
+          & "$gstreamerPath\bin\pkg-config.exe" --libs gstreamer-1.0
+          & "$gstreamerPath\bin\pkg-config.exe" --libs-only-L gstreamer-1.0
+        } else {
+          Write-Warning "pkg-config.exe not found at $gstreamerPath\bin"
+        }
+        
+        Write-Host "Checking library directory contents..."
+        if (Test-Path "$gstreamerPath\lib") {
+          Get-ChildItem "$gstreamerPath\lib" -Filter "*.lib" | Select-Object -First 10 | ForEach-Object { Write-Host "Found lib: $($_.Name)" }
+        } else {
+          Write-Warning "Library directory not found at $gstreamerPath\lib"
+        }
+        
+        Write-Host "GStreamer setup completed"
+      shell: powershell
+
     - name: Install GStreamer dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -42,7 +176,7 @@ jobs:
           gstreamer1.0-plugins-ugly \
           gstreamer1.0-libav \
           pkg-config
-    
+
     - name: Install GStreamer dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
@@ -51,93 +185,12 @@ jobs:
         echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
         echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=$(brew --prefix)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-    
+
     - name: Setup Visual Studio Build Tools
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
-    
-    - name: Install GStreamer dependencies (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        # Install pkg-config
-        Write-Host "Installing pkg-config..."
-        choco install pkgconfiglite -y
-        
-        # Download and install official GStreamer Windows installer
-        $gstVersion = "1.26.2"
-        $gstInstaller = "gstreamer-1.0-msvc-x86_64-$gstVersion.msi"
-        $gstDevInstaller = "gstreamer-1.0-devel-msvc-x86_64-$gstVersion.msi"
-        
-        Write-Host "Downloading GStreamer runtime installer..."
-        try {
-          Invoke-WebRequest -Uri "https://gstreamer.freedesktop.org/data/pkg/windows/$gstVersion/msvc/$gstInstaller" -OutFile "$gstInstaller" -TimeoutSec 300
-          Write-Host "Runtime installer downloaded successfully"
-        } catch {
-          Write-Error "Failed to download runtime installer: $_"
-          exit 1
-        }
-        
-        Write-Host "Installing GStreamer runtime..."
-        try {
-          $process = Start-Process msiexec.exe -ArgumentList "/i $gstInstaller /quiet /norestart ADDLOCAL=ALL" -Wait -PassThru
-          Write-Host "Runtime installation completed with exit code: $($process.ExitCode)"
-        } catch {
-          Write-Error "Failed to install runtime: $_"
-          exit 1
-        }
-        
-        Write-Host "Downloading GStreamer development installer..."
-        try {
-          Invoke-WebRequest -Uri "https://gstreamer.freedesktop.org/data/pkg/windows/$gstVersion/msvc/$gstDevInstaller" -OutFile "$gstDevInstaller" -TimeoutSec 300
-          Write-Host "Development installer downloaded successfully"
-        } catch {
-          Write-Error "Failed to download development installer: $_"
-          exit 1
-        }
-        
-        Write-Host "Installing GStreamer development files..."
-        try {
-          $process = Start-Process msiexec.exe -ArgumentList "/i $gstDevInstaller /quiet /norestart ADDLOCAL=ALL" -Wait -PassThru
-          Write-Host "Development installation completed with exit code: $($process.ExitCode)"
-        } catch {
-          Write-Error "Failed to install development files: $_"
-          exit 1
-        }
-        
-        Write-Host "Setting up environment variables..."
-        # Set environment variables for GStreamer 1.26+ (new installation path)
-        echo "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "PKG_CONFIG_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "GSTREAMER_1_0_ROOT_MSVC_X86_64=C:\Program Files\gstreamer\1.0\msvc_x86_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        
-        # Add additional environment variables to help CMake find libraries
-        echo "GSTREAMER_ROOT=C:\Program Files\gstreamer\1.0\msvc_x86_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "CMAKE_PREFIX_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        
-        Write-Host "Verifying installation..."
-        if (Test-Path "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin\gst-launch-1.0.exe") {
-          Write-Host "GStreamer installation verified successfully"
-        } else {
-          Write-Warning "GStreamer installation may not be complete - gst-launch-1.0.exe not found"
-        }
-        
-        Write-Host "Debugging pkg-config output..."
-        # Debug what pkg-config returns
-        & "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin\pkg-config.exe" --cflags gstreamer-1.0
-        & "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin\pkg-config.exe" --libs gstreamer-1.0
-        & "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin\pkg-config.exe" --libs-only-L gstreamer-1.0
-        
-        Write-Host "Checking library directory contents..."
-        if (Test-Path "C:\Program Files\gstreamer\1.0\msvc_x86_64\lib") {
-          Get-ChildItem "C:\Program Files\gstreamer\1.0\msvc_x86_64\lib" -Filter "*.lib" | Select-Object -First 10 | ForEach-Object { Write-Host "Found lib: $($_.Name)" }
-        } else {
-          Write-Warning "Library directory not found"
-        }
-        
-        Write-Host "GStreamer installation completed"
-      shell: powershell
     
     - name: Install dependencies
       run: npm ci
