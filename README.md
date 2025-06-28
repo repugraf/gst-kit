@@ -35,23 +35,202 @@ npm install @gst/kit
 ### System Requirements
 
 - **Runtime**: Node.js 16+ or Bun 1.0+ (Deno is not supported)
-- **System**: GStreamer 1.14 or higher
+- **System**: GStreamer 1.14 or higher (1.26+ recommended)
 - **Build Tools**: CMake 3.10 or higher, pkg-config
-- **Dependencies**: GStreamer development packages
+- **Dependencies**: GStreamer development packages and plugins
 
-#### Ubuntu/Debian
+### Platform-Specific Installation Guide
+
+#### Ubuntu/Debian (Recommended for Production)
+
+**Complete Installation:**
 
 ```bash
-sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                     libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base \
-                     gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-                     gstreamer1.0-plugins-ugly gstreamer1.0-libav
+# Update package list
+sudo apt-get update
+
+# Install GStreamer core development packages
+sudo apt-get install -y \
+  libgstreamer1.0-dev \
+  libgstreamer-plugins-base1.0-dev \
+  libgstreamer-plugins-bad1.0-dev \
+  pkg-config
+
+# Install GStreamer plugins (essential for most use cases)
+sudo apt-get install -y \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-plugins-ugly \
+  gstreamer1.0-libav
+
+# Install build tools
+sudo apt-get install -y cmake build-essential
 ```
 
-#### macOS
+**Verification:**
 
 ```bash
-brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
+pkg-config --cflags --libs gstreamer-1.0
+gst-launch-1.0 --version
+```
+
+#### macOS (Homebrew)
+
+**Complete Installation:**
+
+```bash
+# Install GStreamer and plugins
+brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
+
+# Install build tools
+brew install cmake
+
+# Set environment variables (add to ~/.zshrc or ~/.bash_profile)
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LIBRARY_PATH="$(brew --prefix)/lib:$LIBRARY_PATH"
+export LD_LIBRARY_PATH="$(brew --prefix)/lib:$LD_LIBRARY_PATH"
+```
+
+**Verification:**
+
+```bash
+pkg-config --cflags --libs gstreamer-1.0
+gst-launch-1.0 --version
+```
+
+#### Windows
+
+**Complete Installation:**
+
+1. **Install Build Tools and CMake:**
+
+   ```powershell
+   # Install Visual Studio Build Tools 2019/2022 (Community edition is free)
+   # Download from: https://visualstudio.microsoft.com/downloads/
+   
+   # Install CMake
+   # Download from: https://cmake.org/download/
+   # Or via chocolatey: choco install cmake
+   
+   # Install pkg-config
+   choco install pkgconfiglite
+   ```
+
+2. **Install GStreamer 1.26.2:**
+
+   ```powershell
+   # Download both runtime and development MSI packages from:
+   # https://gstreamer.freedesktop.org/download/
+   
+   # For 64-bit systems, download and install:
+   # - gstreamer-1.0-msvc-x86_64-1.26.2.msi (runtime)
+   # - gstreamer-1.0-devel-msvc-x86_64-1.26.2.msi (development)
+   
+   # Install both MSI files by double-clicking or using:
+   # msiexec /i gstreamer-1.0-msvc-x86_64-1.26.2.msi /quiet
+   # msiexec /i gstreamer-1.0-devel-msvc-x86_64-1.26.2.msi /quiet
+   ```
+
+3. **Set Environment Variables:**
+
+   ```powershell
+   # Add to system PATH (via System Properties → Environment Variables):
+   C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
+   
+   # Add system environment variables:
+   GSTREAMER_1_0_ROOT_MSVC_X86_64=C:\Program Files\gstreamer\1.0\msvc_x86_64
+   PKG_CONFIG_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig
+   ```
+
+**Verification:**
+
+```powershell
+# Verify GStreamer installation
+gst-launch-1.0 --version
+pkg-config --cflags --libs gstreamer-1.0
+
+# Verify CMake installation
+cmake --version
+```
+
+### Common Installation Issues
+
+#### Problem: "Cannot find gstreamer-1.0"
+
+**Solution:**
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install libgstreamer1.0-dev pkg-config
+
+# macOS
+brew install gstreamer pkg-config
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+# Windows (PowerShell)
+# Ensure environment variables are set correctly:
+# GSTREAMER_1_0_ROOT_MSVC_X86_64=C:\Program Files\gstreamer\1.0\msvc_x86_64
+# PKG_CONFIG_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig
+
+# Verify pkg-config can find GStreamer
+pkg-config --exists gstreamer-1.0 && echo "GStreamer found" || echo "GStreamer NOT found"
+```
+
+#### Problem: Missing plugins (playbin/decodebin errors)
+
+**Solution:**
+
+```bash
+# Ubuntu/Debian - install plugin packages
+sudo apt-get install gstreamer1.0-plugins-{base,good,bad,ugly} gstreamer1.0-libav
+
+# macOS - install plugin packages
+brew install gst-plugins-{base,good,bad,ugly}
+
+# List available plugins
+gst-inspect-1.0 | grep -i plugin
+```
+
+#### Problem: "Permission denied" on Linux
+
+**Solution:**
+
+```bash
+# Add user to audio/video groups
+sudo usermod -a -G audio,video $USER
+# Logout and login again
+
+# Or install PulseAudio for audio support
+sudo apt-get install pulseaudio pulseaudio-utils
+```
+
+### Docker Installation
+
+For containerized applications:
+
+```dockerfile
+# Ubuntu-based container
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    nodejs npm \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libgstreamer-plugins-bad1.0-dev \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    cmake build-essential pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install your application
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 ```
 
 ## Quick Start
@@ -583,6 +762,15 @@ interface AppSrcElement extends Element {
 | Node.js 22+ | ✅ Full          | Latest stable support       |
 | Bun 1.0+    | ✅ Full          | Alternative runtime support |
 | Deno        | ❌ Not supported | Native module limitations   |
+
+## Platform Compatibility
+
+| Platform        | Local Development | Production Ready | Notes                           |
+| --------------- | ----------------- | ---------------- | ------------------------------- |
+| Ubuntu/Linux    | ✅ Full           | ✅ Full          | Excellent for servers           |
+| macOS           | ✅ Full           | ✅ Full          | Intel and Apple Silicon         |
+| Windows         | ✅ Full           | ✅ Full          | Requires environment setup     |
+| Docker          | ✅ Full           | ✅ Full          | Ubuntu-based containers         |
 
 ## License
 
