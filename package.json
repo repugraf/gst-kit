@@ -1,6 +1,6 @@
 {
   "name": "gst-kit",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "type": "module",
   "exports": {
     ".": {
@@ -40,25 +40,30 @@
   "license": "ISC",
   "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
-    "node-addon-api": "8.3.1",
+    "node-addon-api": "8.5.0",
     "cmake-js": "7.3.1"
   },
   "devDependencies": {
-    "@types/node": "24.0.1",
-    "@typescript-eslint/eslint-plugin": "8.34.0",
-    "@typescript-eslint/parser": "8.34.0",
-    "@rollup/plugin-commonjs": "28.0.3",
+    "@types/node": "24.3.0",
+    "@typescript-eslint/eslint-plugin": "8.41.0",
+    "@typescript-eslint/parser": "8.41.0",
+    "@rollup/plugin-commonjs": "28.0.6",
     "@rollup/plugin-node-resolve": "16.0.1",
-    "@rollup/plugin-typescript": "12.1.2",
-    "eslint": "9.28.0",
-    "prettier": "3.5.3",
-    "rollup": "4.43.0",
-    "rollup-plugin-dts": "6.2.1",
+    "@rollup/plugin-typescript": "12.1.4",
+    "eslint": "9.34.0",
+    "prettier": "3.6.2",
+    "rollup": "4.49.0",
+    "rollup-plugin-dts": "6.2.3",
     "tslib": "2.8.1",
-    "typescript": "5.8.3",
-    "vitest": "3.2.3"
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "overrides": {
+    "cmake-js": {
+      "axios": "1.11.0"
+    }
   }
 }
