@@ -4,7 +4,11 @@
       "name": "linux-gcc-x64",
       "includePath": [
         "${workspaceFolder}/**",
-        "/home/serhii-mamedov/.nvm/versions/node/v20.16.0/bin/node"
+        "/usr/include/gstreamer-1.0",
+        "/usr/include/x86_64-linux-gnu",
+        "/usr/include/glib-2.0",
+        "/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+        "${workspaceFolder}/node_modules/node-addon-api"
       ],
       "compilerPath": "/usr/lib/ccache/gcc",
       "cStandard": "${default}",
@@ -12,6 +16,10 @@
       "intelliSenseMode": "linux-gcc-x64",
       "compilerArgs": [
         ""
+      ],
+      "defines": [
+        "NAPI_CPP_EXCEPTIONS",
+        "BUILDING_NODE_EXTENSION"
       ]
     }
   ],
