@@ -29,7 +29,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 ## Installation
 
 ```bash
-npm install @gst/kit
+npm install @gst-kit
 ```
 
 ### System Requirements
