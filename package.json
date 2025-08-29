@@ -1,6 +1,6 @@
 {
   "name": "gst-kit",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "type": "module",
   "exports": {
     ".": {
@@ -36,8 +36,16 @@
     "addon",
     "typescript"
   ],
-  "author": "Serhii Mamedov",
+  "author": {
+    "name": "Serhii Mamedov",
+    "email": "bboyvivus@gmail.com"
+  },
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:repugraf/gst-kit.git"
+  },
+  "homepage": "https://github.com/repugraf/gst-kit",
   "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
     "node-addon-api": "8.5.0",
