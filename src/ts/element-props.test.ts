@@ -84,6 +84,12 @@ describe.concurrent("Element Properties", () => {
     const maxSizeTime2 = queue.getElementProperty("max-size-time");
     expect(maxSizeTime2?.type).toBe("bigint");
     expect(maxSizeTime2?.value).toBe(1000n);
+
+    // Test setting numbers larger then uint32 within javaScript number (which is a float64)
+    queue.setElementProperty("max-size-time", Number.MAX_SAFE_INTEGER);
+    const maxSizeTime3 = queue.getElementProperty("max-size-time");
+    expect(maxSizeTime3?.type).toBe("bigint");
+    expect(maxSizeTime3?.value).toBe(BigInt(Number.MAX_SAFE_INTEGER));
   });
 
   it("should set caps property", () => {
