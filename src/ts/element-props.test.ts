@@ -67,6 +67,31 @@ describe.concurrent("Element Properties", () => {
     expect(numBuffers?.value).toBe(100);
   });
 
+  it("should set bigint property", () => {
+    const pipeline = new Pipeline("videotestsrc ! queue name=q ! fakesink");
+    const queue = pipeline.getElementByName("q");
+
+    if (!queue) throw new Error("Element not found");
+
+    // Test setting num-buffers property with bigint
+    queue.setElementProperty("max-size-time", 1000000000n);
+    const maxSizeTime = queue.getElementProperty("max-size-time");
+    expect(maxSizeTime?.type).toBe("bigint");
+    expect(maxSizeTime?.value).toBe(1000000000n);
+
+    // Test setting num-buffers property with number
+    queue.setElementProperty("max-size-time", 1000);
+    const maxSizeTime2 = queue.getElementProperty("max-size-time");
+    expect(maxSizeTime2?.type).toBe("bigint");
+    expect(maxSizeTime2?.value).toBe(1000n);
+
+    // Test setting numbers larger then uint32 within javaScript number (which is a float64)
+    queue.setElementProperty("max-size-time", Number.MAX_SAFE_INTEGER);
+    const maxSizeTime3 = queue.getElementProperty("max-size-time");
+    expect(maxSizeTime3?.type).toBe("bigint");
+    expect(maxSizeTime3?.value).toBe(BigInt(Number.MAX_SAFE_INTEGER));
+  });
+
   it("should set caps property", () => {
     const pipeline = new Pipeline("videotestsrc ! capsfilter name=filter ! fakesink");
     const element = pipeline.getElementByName("filter");

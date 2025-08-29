@@ -57,6 +57,21 @@ namespace TypeConversion {
         g_value_set_double(out_value, js_value.As<Napi::Number>().DoubleValue());
         return true;
       }
+      case G_TYPE_UINT64: {
+        if (js_value.IsNumber()) {
+          g_value_set_uint64(
+            out_value, static_cast<uint64_t>(js_value.As<Napi::Number>().DoubleValue())
+          );
+          return true;
+        } else if (js_value.IsBigInt()) {
+          bool lossless;
+          g_value_set_uint64(out_value, js_value.As<Napi::BigInt>().Uint64Value(&lossless));
+          return true;
+        } else {
+          g_value_unset(out_value);
+          return false;
+        }
+      }
       default: {
         // Handle special GStreamer types
         if (target_type == gst_caps_get_type()) {
@@ -105,11 +120,11 @@ namespace TypeConversion {
             std::string flags_str = js_value.As<Napi::String>().Utf8Value();
             GFlagsClass *flags_class = G_FLAGS_CLASS(g_type_class_ref(target_type));
             guint flags_value = 0;
-            
+
             // Try to parse the string as flag names
             gchar **flag_names = g_strsplit(flags_str.c_str(), "+", -1);
             gboolean success = TRUE;
-            
+
             for (gint i = 0; flag_names[i] != NULL; i++) {
               g_strstrip(flag_names[i]); // Remove whitespace
               GFlagsValue *flag_val = g_flags_get_value_by_nick(flags_class, flag_names[i]);
@@ -123,10 +138,10 @@ namespace TypeConversion {
                 break;
               }
             }
-            
+
             g_strfreev(flag_names);
             g_type_class_unref(flags_class);
-            
+
             if (success) {
               g_value_set_flags(out_value, flags_value);
               return true;
@@ -180,6 +195,8 @@ namespace TypeConversion {
       return Napi::Number::New(env, g_value_get_float(gvalue));
     } else if (g_value_type == G_TYPE_DOUBLE) {
       return Napi::Number::New(env, g_value_get_double(gvalue));
+    } else if (g_value_type == G_TYPE_UINT64) {
+      return Napi::BigInt::New(env, g_value_get_uint64(gvalue));
     } else if (GST_VALUE_HOLDS_ARRAY(gvalue)) {
       int size = gst_value_array_get_size(gvalue);
       Napi::Array array = Napi::Array::New(env, size);
@@ -224,7 +241,7 @@ namespace TypeConversion {
     } else if (G_TYPE_IS_FLAGS(G_VALUE_TYPE(gvalue))) {
       guint flags_val = g_value_get_flags(gvalue);
       GFlagsClass *flags_class = G_FLAGS_CLASS(g_type_class_ref(G_VALUE_TYPE(gvalue)));
-      
+
       // Manual flags to string conversion
       std::string flags_str = "";
       if (flags_val == 0) {
@@ -246,7 +263,7 @@ namespace TypeConversion {
           }
         }
       }
-      
+
       if (!flags_str.empty()) {
         Napi::Value result = Napi::String::New(env, flags_str);
         g_type_class_unref(flags_class);
@@ -297,13 +314,15 @@ namespace TypeConversion {
     if (js_value.IsNull()) {
       return env.Null();
     }
-    
+
     // Create the standardized result object
     Napi::Object result = Napi::Object::New(env);
-    
+
     // Determine the type and set both type and value
     if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean()) {
       result.Set("type", Napi::String::New(env, "primitive"));
+    } else if (js_value.IsBigInt()) {
+      result.Set("type", Napi::String::New(env, "bigint"));
     } else if (js_value.IsArray()) {
       result.Set("type", Napi::String::New(env, "array"));
     } else if (js_value.IsBuffer()) {
@@ -320,7 +339,7 @@ namespace TypeConversion {
       // Default to primitive for unknown types
       result.Set("type", Napi::String::New(env, "primitive"));
     }
-    
+
     result.Set("value", js_value);
     return result;
   }
