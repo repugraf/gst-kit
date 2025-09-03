@@ -59,13 +59,20 @@ Element::Element(const Napi::CallbackInfo &info) :
     "addPadProbe"
   );
   auto set_pad_method = Napi::Function::New(
-    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->set_pad(info); }, "setPad"
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->set_pad(info); },
+    "setPad"
   );
   auto get_pad_method = Napi::Function::New(
-    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->get_pad(info); }, "getPad"
+    env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->get_pad(info); },
+    "getPad"
   );
   auto push_method = Napi::Function::New(
     env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->push(info); }, "push"
+  );
+  auto end_of_stream_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->end_of_stream(info); },
+    "endOfStream"
   );
 
   std::vector property_descriptors = {
@@ -93,6 +100,9 @@ Element::Element(const Napi::CallbackInfo &info) :
   if (element && GST_IS_APP_SRC(element.get())) {
     property_descriptors.push_back(
       Napi::PropertyDescriptor::Value("push", push_method, napi_enumerable)
+    );
+    property_descriptors.push_back(
+      Napi::PropertyDescriptor::Value("endOfStream", end_of_stream_method, napi_enumerable)
     );
   }
 
@@ -557,9 +567,49 @@ Napi::Value Element::push(const Napi::CallbackInfo &info) {
   return env.Undefined();
 }
 
+Napi::Value Element::end_of_stream(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  // Validate that we have an app source element
+  if (!element || !GST_IS_APP_SRC(element.get())) {
+    Napi::TypeError::New(env, "endOfStream() can only be called on app-src-element")
+      .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  // Send end-of-stream signal to app source
+  GstFlowReturn ret = gst_app_src_end_of_stream(GST_APP_SRC(element.get()));
+
+  // Check for errors
+  if (ret != GST_FLOW_OK) {
+    std::string error_msg = "Failed to send end-of-stream: ";
+    switch (ret) {
+      case GST_FLOW_FLUSHING:
+        error_msg += "Element is flushing";
+        break;
+      case GST_FLOW_EOS:
+        error_msg += "Already at end of stream";
+        break;
+      case GST_FLOW_NOT_LINKED:
+        error_msg += "Source pad not linked";
+        break;
+      case GST_FLOW_ERROR:
+        error_msg += "Generic error";
+        break;
+      default:
+        error_msg += "Unknown error (" + std::to_string(ret) + ")";
+        break;
+    }
+    Napi::Error::New(env, error_msg).ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  return env.Undefined();
+}
+
 Napi::Value Element::set_pad(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  
+
   if (info.Length() < 2 || !info[0].IsString() || !info[1].IsString()) {
     Napi::TypeError::New(env, "setPad() requires two string arguments (attribute, padName)")
       .ThrowAsJavaScriptException();
@@ -581,15 +631,15 @@ Napi::Value Element::set_pad(const Napi::CallbackInfo &info) {
   }
 
   g_object_set(G_OBJECT(element.get()), attribute.c_str(), pad, NULL);
-  
+
   gst_object_unref(pad);
-  
+
   return env.Undefined();
 }
 
 Napi::Value Element::get_pad(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  
+
   if (info.Length() < 1 || !info[0].IsString()) {
     Napi::TypeError::New(env, "getPad() requires one string argument (padName)")
       .ThrowAsJavaScriptException();
@@ -603,7 +653,7 @@ Napi::Value Element::get_pad(const Napi::CallbackInfo &info) {
   std::string padName = info[0].As<Napi::String>().Utf8Value();
 
   GstPad *pad = gst_element_get_static_pad(element.get(), padName.c_str());
-  
+
   if (!pad) {
     return env.Null();
   }
@@ -612,7 +662,7 @@ Napi::Value Element::get_pad(const Napi::CallbackInfo &info) {
   Napi::Object padObj = Napi::Object::New(env);
   padObj.Set("name", Napi::String::New(env, GST_PAD_NAME(pad)));
   padObj.Set("direction", Napi::Number::New(env, GST_PAD_DIRECTION(pad)));
-  
+
   // Get pad caps if available
   GstCaps *caps = gst_pad_get_current_caps(pad);
   if (caps) {
@@ -623,8 +673,8 @@ Napi::Value Element::get_pad(const Napi::CallbackInfo &info) {
   } else {
     padObj.Set("caps", env.Null());
   }
-  
+
   gst_object_unref(pad);
-  
+
   return padObj;
 }
