@@ -9,10 +9,7 @@
 
 class Element : public Napi::ObjectWrap<Element> {
 public:
-  static Napi::Object CreateFromGstElement(
-    Napi::Env env,
-    GstElement *element
-  );
+  static Napi::Object CreateFromGstElement(Napi::Env env, GstElement *element);
 
   Element(const Napi::CallbackInfo &info);
   virtual ~Element() = default;
@@ -27,6 +24,7 @@ public:
   Napi::Value on_sample(const Napi::CallbackInfo &info);
 
   Napi::Value push(const Napi::CallbackInfo &info);
+  Napi::Value end_of_stream(const Napi::CallbackInfo &info);
 
 private:
   std::unique_ptr<GstElement, decltype(&gst_object_unref)> element;

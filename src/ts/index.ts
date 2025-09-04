@@ -131,6 +131,7 @@ type AppSinkElement = {
 type AppSrcElement = {
   readonly type: "app-src-element";
   push(buffer: Buffer, pts?: Buffer | number): void;
+  endOfStream(): void;
 } & ElementBase;
 
 interface Pipeline {

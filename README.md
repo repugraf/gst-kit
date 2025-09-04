@@ -320,6 +320,206 @@ if (source?.type === 'app-src-element') {
 }
 ```
 
+### Working with AppSrc for Custom Data Sources (with EOS)
+
+Use AppSrc with EOS when you need to process data that can't be handled by standard GStreamer elements like `filesrc`:
+
+```javascript
+import { Pipeline } from '@gst/kit';
+import { createReadStream } from 'fs';
+
+// Real-world scenarios where AppSrc + EOS is needed:
+// 1. Custom encrypted file formats
+// 2. Network streams with custom protocols
+// 3. Database BLOBs containing media data
+// 4. Programmatically generated content with known duration
+// 5. Multi-source aggregation
+
+async function streamEncryptedVideoFile(encryptedFilePath) {
+  const pipeline = new Pipeline('appsrc name=source ! h264parse ! avdec_h264 ! autovideosink');
+  const source = pipeline.getElementByName('source');
+
+  if (source?.type === 'app-src-element') {
+    source.setElementProperty('caps', 'video/x-h264,stream-format=byte-stream');
+    source.setElementProperty('is-live', false); // File-like behavior
+    
+    await pipeline.play();
+    
+    // Read and decrypt file chunks
+    const encryptedStream = createReadStream(encryptedFilePath);
+    
+    for await (const encryptedChunk of encryptedStream) {
+      // Decrypt the chunk (your custom decryption logic)
+      const decryptedBuffer = await decryptChunk(encryptedChunk);
+      source.push(decryptedBuffer);
+    }
+    
+    // IMPORTANT: Signal end-of-stream when file is fully processed
+    source.endOfStream();
+    
+    // Wait for natural completion
+    while (true) {
+      const message = await pipeline.busPop(1000);
+      if (message?.type === 'eos') {
+        console.log('Encrypted file playback completed');
+        break;
+      }
+    }
+    
+    await pipeline.stop();
+  }
+}
+
+// Example: Stream from database BLOB
+async function streamFromDatabase(mediaId) {
+  const pipeline = new Pipeline('appsrc name=source ! decodebin ! autovideosink');
+  const source = pipeline.getElementByName('source');
+
+  if (source?.type === 'app-src-element') {
+    // Note: Let decodebin auto-detect format
+    source.setElementProperty('is-live', false);
+    
+    await pipeline.play();
+    
+    // Stream media data from database in chunks
+    const mediaChunks = await fetchMediaFromDatabase(mediaId);
+    
+    for (const chunk of mediaChunks) {
+      source.push(chunk);
+    }
+    
+    source.endOfStream(); // Signal completion
+    
+    // Handle completion
+    while (true) {
+      const message = await pipeline.busPop(1000);
+      if (message?.type === 'eos') break;
+    }
+    
+    await pipeline.stop();
+  }
+}
+
+// Placeholder functions - implement according to your needs
+async function decryptChunk(encryptedData) {
+  // Your decryption logic here
+  return encryptedData; // Return decrypted buffer
+}
+
+async function fetchMediaFromDatabase(mediaId) {
+  // Your database fetch logic here
+  return []; // Return array of media chunks
+}
+```
+
+### Recording Programmatically Generated Streams to Files
+
+For recording programmatically generated content (procedural video, custom visualizations, etc.) to video files:
+
+```javascript
+import { Pipeline } from '@gst/kit';
+import path from 'path';
+import fs from 'fs';
+
+async function recordGeneratedVideoToFile() {
+  const outputFile = path.join(process.cwd(), 'recording.ogv');
+  
+  // Remove existing file if it exists
+  if (fs.existsSync(outputFile)) {
+    fs.unlinkSync(outputFile);
+  }
+
+  // Create recording pipeline (OGV/Theora is most reliable for programmatic content)
+  const pipeline = new Pipeline(`
+    appsrc name=mysource ! 
+    videoconvert ! 
+    theoraenc ! 
+    oggmux ! 
+    filesink location=${outputFile}
+  `);
+
+  const appsrc = pipeline.getElementByName('mysource');
+
+  if (appsrc?.type === 'app-src-element') {
+    // Configure for file recording (not live streaming)
+    appsrc.setElementProperty('caps', 'video/x-raw,format=RGB,width=640,height=480,framerate=30/1');
+    appsrc.setElementProperty('format', 'time');
+    appsrc.setElementProperty('is-live', false);
+    appsrc.setElementProperty('do-timestamp', true);
+
+    await pipeline.play();
+
+    // Generate and push frames
+    const frameCount = 300; // 10 seconds at 30fps
+    const width = 640;
+    const height = 480;
+    const frameSize = width * height * 3; // RGB
+
+    for (let i = 0; i < frameCount; i++) {
+      // Generate frame data (replace with your content generation logic)
+      const buffer = generateFrame(i, width, height);
+      appsrc.push(buffer);
+      
+      if (i % 30 === 0) {
+        console.log(`📹 Recorded ${i} frames (${i / 30} seconds)`);
+      }
+    }
+
+    // CRITICAL: Signal end-of-stream when done generating content
+    appsrc.endOfStream();
+
+    // Wait for recording completion
+    while (true) {
+      const message = await pipeline.busPop(1000);
+      if (!message) continue;
+      
+      if (message.type === 'eos') {
+        console.log('🎉 Recording completed!');
+        break;
+      } else if (message.type === 'error') {
+        console.error('❌ Recording error:', message.message);
+        break;
+      }
+    }
+
+    await pipeline.stop();
+    
+    // Verify file was created
+    if (fs.existsSync(outputFile)) {
+      const stats = fs.statSync(outputFile);
+      console.log(`✅ File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+    }
+  }
+}
+
+function generateFrame(frameNumber, width, height) {
+  // Example: Generate animated colored frames
+  const buffer = Buffer.alloc(width * height * 3);
+  const red = (frameNumber * 5) % 256;
+  const green = (frameNumber * 3) % 256;
+  const blue = (frameNumber * 7) % 256;
+  
+  for (let i = 0; i < buffer.length; i += 3) {
+    buffer[i] = red;     // R
+    buffer[i + 1] = green; // G
+    buffer[i + 2] = blue;  // B
+  }
+  
+  return buffer;
+}
+
+// Usage
+recordGeneratedVideoToFile();
+```
+
+**Key Points for File Recording:**
+
+- **EOS is Required**: Always call `endOfStream()` when done pushing data
+- **OGV/Theora**: Most reliable format for programmatic content
+- **Non-live Mode**: Set `is-live: false` for file-like behavior
+- **Timestamping**: Enable `do-timestamp: true` for proper timing
+- **Error Handling**: Monitor bus messages for completion and errors
+
 ### Extracting Buffer Data with Pad Probes
 
 ```javascript
@@ -745,6 +945,7 @@ interface AppSinkElement extends Element {
 interface AppSrcElement extends Element {
   readonly type: "app-src-element"
   push(buffer: Buffer, pts?: Buffer | number): void
+  endOfStream(): void
 }
 ```
 
