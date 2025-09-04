@@ -6,8 +6,9 @@
  * Creates colorful animated frames and properly handles EOS.
  */
 import { Pipeline } from "../dist/esm/index.mjs";
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
+import { randomBytes } from "node:crypto";
 
 // Output file path
 const outputFile = path.join(process.cwd(), "recorded_stream.ogv");
@@ -39,29 +40,11 @@ console.log(`🎬 Starting recording to: ${outputFile}`);
 pipeline.play();
 
 let frameCount = 0;
-const width = 640;
-const height = 480;
-const frameSize = width * height * 3; // RGB = 3 bytes per pixel
 
 // Generate frames with different colors
 const pushInterval = setInterval(() => {
   frameCount++;
-
-  // Create a frame with changing colors based on frame number
-  const buffer = Buffer.alloc(frameSize);
-  const red = (frameCount * 5) % 256;
-  const green = (frameCount * 3) % 256;
-  const blue = (frameCount * 7) % 256;
-
-  // Fill buffer with RGB pattern
-  for (let i = 0; i < frameSize; i += 3) {
-    buffer[i] = red; // R
-    buffer[i + 1] = green; // G
-    buffer[i + 2] = blue; // B
-  }
-
-  // Push buffer without timestamp - let appsrc handle timestamping
-  appsrc.push(buffer);
+  appsrc.push(Buffer.alloc(640 * 480 * 3).fill(randomBytes(3)));
 
   if (frameCount % 30 === 0) {
     console.log(`📹 Recorded ${frameCount} frames (${frameCount / 30} seconds)`);
@@ -96,13 +79,10 @@ while (true) {
   }
 }
 
-// Check if file was created successfully
-setTimeout(() => {
-  if (fs.existsSync(outputFile)) {
-    const stats = fs.statSync(outputFile);
-    console.log(`✅ Recording complete! File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
-    console.log(`📁 Output file: ${outputFile}`);
-  } else {
-    console.log("❌ Output file was not created");
-  }
-}, 1000);
+if (fs.existsSync(outputFile)) {
+  const stats = fs.statSync(outputFile);
+  console.log(`✅ Recording complete! File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`📁 Output file: ${outputFile}`);
+} else {
+  console.log("❌ Output file was not created");
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Pipeline } from "../dist/esm/index.mjs";
+import { randomBytes } from "node:crypto";
 
 const pipeline = new Pipeline("appsrc name=mysource is-live=true ! videoconvert ! autovideosink");
 const appsrc = pipeline.getElementByName("mysource");
@@ -12,10 +13,7 @@ appsrc.setElementProperty(
 pipeline.play();
 
 const pushInterval = setInterval(
-  () =>
-    appsrc.push(
-      Buffer.alloc(320 * 240 * 3, Math.floor(Math.random() * 16777215).toString(16), "hex")
-    ),
+  () => appsrc.push(Buffer.alloc(320 * 240 * 3).fill(randomBytes(3))),
   33
 );
 
