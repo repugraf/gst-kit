@@ -29,7 +29,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 ## Installation
 
 ```bash
-npm install @gst-kit
+npm install gst-kit
 ```
 
 ### System Requirements
@@ -238,7 +238,7 @@ RUN npm run build
 ### Basic Pipeline
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc ! autovideosink');
 await pipeline.play();
@@ -252,7 +252,7 @@ setTimeout(async () => {
 ### Working with AppSink (Pull-based Approach)
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink');
 const sink = pipeline.getElementByName('sink');
@@ -274,7 +274,7 @@ if (sink?.type === 'app-sink-element') {
 ### Working with AppSink (Event-Driven/Push Approach)
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink');
 const sink = pipeline.getElementByName('sink');
@@ -300,7 +300,7 @@ if (sink?.type === 'app-sink-element') {
 ### Working with AppSrc (Source Input)
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('appsrc name=source ! videoconvert ! autovideosink');
 const source = pipeline.getElementByName('source');
@@ -325,7 +325,7 @@ if (source?.type === 'app-src-element') {
 Use AppSrc with EOS when you need to process data that can't be handled by standard GStreamer elements like `filesrc`:
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 import { createReadStream } from 'fs';
 
 // Real-world scenarios where AppSrc + EOS is needed:
@@ -417,7 +417,7 @@ async function fetchMediaFromDatabase(mediaId) {
 For recording programmatically generated content (procedural video, custom visualizations, etc.) to video files:
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 import path from 'path';
 import fs from 'fs';
 
@@ -523,7 +523,7 @@ recordGeneratedVideoToFile();
 ### Extracting Buffer Data with Pad Probes
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline(
   'videotestsrc ! videoconvert ! x264enc ! rtph264pay name=pay ! fakesink'
@@ -572,7 +572,7 @@ if (payloader) {
 ### Pipeline State Management
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc ! autovideosink');
 
@@ -595,7 +595,7 @@ await pipeline.stop();
 ### Position and Duration Queries
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc ! timeoverlay ! autovideosink');
 await pipeline.play();
@@ -610,7 +610,7 @@ setInterval(() => {
 ### Seeking
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc ! timeoverlay ! autovideosink');
 await pipeline.play();
@@ -623,7 +623,7 @@ console.log('Seek successful:', seekSuccess);
 ### Message Bus Handling
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc num-buffers=100 ! autovideosink');
 await pipeline.play();
@@ -649,7 +649,7 @@ while (true) {
 ### Element Property Manipulation
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline('videotestsrc name=source ! capsfilter name=filter ! autovideosink');
 
@@ -675,7 +675,7 @@ const caps = capsResult?.value;
 ### Pad Manipulation
 
 ```javascript
-import { Pipeline } from '@gst/kit';
+import { Pipeline } from 'gst-kit';
 
 const pipeline = new Pipeline(
   'input-selector name=sel ! autovideosink videotestsrc pattern=0 ! sel.sink_0 videotestsrc pattern=1 ! sel.sink_1'
@@ -755,7 +755,7 @@ console.log('Pad info:', srcPad?.name, srcPad?.direction, srcPad?.caps);
 ```txt
 gst-kit/
 ├── src/
-│   ├── cpp/                    # C++ native implementation
+│   ├── cpp/                   # C++ native implementation
 │   │   ├── addon.cpp          # N-API module entry point
 │   │   ├── pipeline.cpp       # Pipeline class implementation
 │   │   ├── element.cpp        # Element class implementation
@@ -768,6 +768,8 @@ gst-kit/
 │   ├── basic-pipeline.mjs     # Simple pipeline example
 │   ├── appsink.mjs           # AppSink usage
 │   ├── appsrc.mjs            # AppSrc usage
+│   ├── appsrc-eos.mjs        # AppSrc with end-of-stream
+│   ├── record-to-file.mjs    # Recording to file example
 │   ├── rtp-timestamp.mjs     # RTP handling
 │   ├── bus.mjs               # Message bus handling
 │   ├── seek.mjs              # Seeking functionality
@@ -815,7 +817,7 @@ gst-kit/
 ## Buffer Flags Reference
 
 ```javascript
-import { GstBufferFlags } from '@gst/kit';
+import { GstBufferFlags } from 'gst-kit';
 
 // Check buffer flags
 if (bufferData.flags & GstBufferFlags.GST_BUFFER_FLAG_DELTA_UNIT) {
