@@ -13,28 +13,37 @@ pkg_check_modules(GSTREAMER_RTP REQUIRED gstreamer-rtp-1.0)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GOBJECT REQUIRED gobject-2.0)
 
+# N-API runtime headers must be provided via -DNAPI_INCLUDE_DIR
+# This allows compatibility with Node.js, Bun, Deno, and other N-API runtimes
+# Use the build script: npm run build:native
+
 # Find node-addon-api
-find_path(NODE_ADDON_API_DIR
-    NAMES napi.h
-    PATHS 
-        ${CMAKE_JS_INC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/node_modules/node-addon-api
-        ${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/node-addon-api
-    NO_DEFAULT_PATH
-)
+if(NOT DEFINED NODE_ADDON_API_DIR)
+    find_path(NODE_ADDON_API_DIR
+        NAMES napi.h
+        PATHS 
+            ${CMAKE_CURRENT_SOURCE_DIR}/node_modules/node-addon-api
+            ${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/node-addon-api
+        NO_DEFAULT_PATH
+    )
+endif()
 
 if(NOT NODE_ADDON_API_DIR)
     message(FATAL_ERROR "node-addon-api not found. Please ensure dependencies are installed:\n"
-                        "  npm install\n"
+                        "  npm install (or equivalent for your runtime)\n"
                         "Searched in:\n"
-                        "  - ${CMAKE_JS_INC}\n"
                         "  - ${CMAKE_CURRENT_SOURCE_DIR}/node_modules/node-addon-api\n"
                         "  - ${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/node-addon-api")
 endif()
 
+if(NOT NAPI_INCLUDE_DIR)
+    message(FATAL_ERROR "N-API runtime headers not found. Please specify -DNAPI_INCLUDE_DIR=<path>\n"
+                        "This should point to the directory containing node.h or equivalent N-API headers.")
+endif()
+
 # Include directories
 include_directories(
-    ${CMAKE_JS_INC}
+    ${NAPI_INCLUDE_DIR}
     ${NODE_ADDON_API_DIR}
     ${GSTREAMER_INCLUDE_DIRS}
     ${GSTREAMER_APP_INCLUDE_DIRS}
@@ -110,7 +119,7 @@ add_library(gst_kit_addon SHARED
     src/cpp/async-workers.cpp
 )
 
-# Set output name and properties (keep .node extension for Node.js compatibility)
+# Set output name and properties (use .node extension for N-API runtime compatibility)
 set_target_properties(gst_kit_addon PROPERTIES
     PREFIX ""
     SUFFIX ".node"
@@ -123,7 +132,6 @@ set_target_properties(gst_kit_addon PROPERTIES
 
 # Link GStreamer and Node.js libraries
 target_link_libraries(gst_kit_addon
-    ${CMAKE_JS_LIB}
     ${GSTREAMER_LIBRARIES}
     ${GSTREAMER_APP_LIBRARIES}
     ${GSTREAMER_RTP_LIBRARIES}
@@ -153,7 +161,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-# Add compile definitions for Node.js addon
+# Add compile definitions for N-API addon
 target_compile_definitions(gst_kit_addon PRIVATE
     NAPI_CPP_EXCEPTIONS
     BUILDING_NODE_EXTENSION

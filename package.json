@@ -12,7 +12,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf build dist",
-    "build:native": "cmake-js compile",
+    "build:native": "node scripts/build-native.mjs",
     "build:ts": "rollup -c rollup.config.mjs",
     "build": "npm run clean && npm run build:native && npm run build:ts",
     "test:node": "node modules/common.cjs && node modules/esm.mjs",
@@ -48,19 +48,18 @@
   "homepage": "https://github.com/repugraf/gst-kit",
   "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
-    "node-addon-api": "8.5.0",
-    "cmake-js": "7.3.1"
+    "node-addon-api": "8.5.0"
   },
   "devDependencies": {
-    "@types/node": "24.3.0",
-    "@typescript-eslint/eslint-plugin": "8.41.0",
-    "@typescript-eslint/parser": "8.41.0",
     "@rollup/plugin-commonjs": "28.0.6",
     "@rollup/plugin-node-resolve": "16.0.1",
     "@rollup/plugin-typescript": "12.1.4",
-    "eslint": "9.34.0",
+    "@types/node": "24.3.1",
+    "@typescript-eslint/eslint-plugin": "8.42.0",
+    "@typescript-eslint/parser": "8.42.0",
+    "eslint": "9.35.0",
     "prettier": "3.6.2",
-    "rollup": "4.49.0",
+    "rollup": "4.50.1",
     "rollup-plugin-dts": "6.2.3",
     "tslib": "2.8.1",
     "typescript": "5.9.2",
@@ -68,10 +67,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "overrides": {
-    "cmake-js": {
-      "axios": "1.11.0"
-    }
   }
 }
