@@ -4,7 +4,7 @@ A modern Node.js binding for GStreamer, providing high-level APIs for multimedia
 
 ## Project Goals & Modernization
 
-This project represents a complete modernization of the old [node-gstreamer-superficial](https://www.npmjs.com/package/gstreamer-superficial) library, featuring:
+This project represents a complete modernization of the old [node-gstreamer-superficial](https://github.com/dturing/node-gstreamer-superficial) library, featuring:
 
 ### Modern Runtime Support
 
@@ -26,6 +26,37 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 - **Comprehensive testing**: Extensive test coverage with modern test runner
 - **Better documentation**: Clear examples and API documentation
 
+## Complete Feature Set
+
+### Core Pipeline Features
+
+- **Pipeline Management**: Create, play, pause, stop GStreamer pipelines
+- **State Management**: Comprehensive state change handling with detailed results
+- **Element Access**: Get elements by name with proper typing
+- **Property System**: Get/set element properties with type safety
+
+### Advanced Data Access
+
+- **App Sources & Sinks**: Two approaches for data access:
+  - **Pull-based**: Explicitly request samples with `getSample()` (async, controlled timing)
+  - **Push-based**: Reactive callbacks with `onSample()` (automatic, real-time)
+- **Pad Probes**: Add/remove event-driven callbacks to intercept comprehensive buffer data
+- **Buffer Analysis**: Extract raw data, timing information, flags, caps, and metadata
+
+### Media Processing
+
+- **RTP Support**: Extract RTP metadata including timestamps, sequence numbers, SSRC, payload type
+- **Seeking**: Frame-accurate seeking with success feedback
+- **Query System**: Position and duration queries in seconds
+- **Message Bus**: Handle GStreamer messages (EOS, errors, warnings, state changes)
+
+### Runtime Features
+
+- **Multi-format Support**: Video, audio, containers, streaming protocols
+- **Codec Support**: H.264, H.265, VP8, VP9, AV1, and more through GStreamer plugins
+- **Network Streaming**: RTP, RTSP, HLS, DASH, WebRTC protocols
+- **Hardware Acceleration**: GPU-accelerated encoding/decoding where available
+
 ## Installation
 
 ```bash
@@ -41,9 +72,19 @@ npm install gst-kit
 
 ### Platform-Specific Installation Guide
 
+**Cross-Platform Alternative**: For any operating system, you can use the [setup-cpp](https://www.npmjs.com/package/setup-cpp) tool to automatically install compilers, build tools, and package managers:
+
+```bash
+# Install development tools across platforms (Windows, macOS, Linux)
+npx setup-cpp --compiler auto --cmake true --pkg-config true
+
+# On Windows, this can also install Chocolatey:
+npx setup-cpp --compiler msvc --cmake true --pkg-config true --choco true
+```
+
 #### Ubuntu/Debian (Recommended for Production)
 
-**Complete Installation:**
+##### Option A: Package Manager (Traditional)
 
 ```bash
 # Update package list
@@ -68,6 +109,25 @@ sudo apt-get install -y \
 sudo apt-get install -y cmake build-essential
 ```
 
+##### Option B: Cross-Platform Setup with setup-cpp (Ubuntu)
+
+```bash
+# Install build tools automatically
+npx setup-cpp --compiler auto --cmake true --pkg-config true
+
+# Then install GStreamer packages
+sudo apt-get update
+sudo apt-get install -y \
+  libgstreamer1.0-dev \
+  libgstreamer-plugins-base1.0-dev \
+  libgstreamer-plugins-bad1.0-dev \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-plugins-ugly \
+  gstreamer1.0-libav
+```
+
 **Verification:**
 
 ```bash
@@ -77,7 +137,7 @@ gst-launch-1.0 --version
 
 #### macOS (Homebrew)
 
-**Complete Installation:**
+##### Option A: Homebrew (Traditional)
 
 ```bash
 # Install GStreamer and plugins
@@ -85,6 +145,21 @@ brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plu
 
 # Install build tools
 brew install cmake
+
+# Set environment variables (add to ~/.zshrc or ~/.bash_profile)
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LIBRARY_PATH="$(brew --prefix)/lib:$LIBRARY_PATH"
+export LD_LIBRARY_PATH="$(brew --prefix)/lib:$LD_LIBRARY_PATH"
+```
+
+##### Option B: Cross-Platform Setup with setup-cpp (macOS)
+
+```bash
+# Install build tools automatically
+npx setup-cpp --compiler auto --cmake true --pkg-config true
+
+# Then install GStreamer via Homebrew
+brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
 
 # Set environment variables (add to ~/.zshrc or ~/.bash_profile)
 export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
@@ -105,6 +180,8 @@ gst-launch-1.0 --version
 
 1. **Install Build Tools and CMake:**
 
+   ##### Option A: Manual Installation
+
    ```powershell
    # Install Visual Studio Build Tools 2019/2022 (Community edition is free)
    # Download from: https://visualstudio.microsoft.com/downloads/
@@ -113,8 +190,16 @@ gst-launch-1.0 --version
    # Download from: https://cmake.org/download/
    # Or via chocolatey: choco install cmake
    
-   # Install pkg-config
+   # Install pkg-config (REQUIRED for build to work)
    choco install pkgconfiglite
+   ```
+
+   ##### Option B: Cross-Platform Setup with setup-cpp (Recommended)
+
+   ```powershell
+   # Use setup-cpp for automated toolchain installation (works on Windows, macOS, Linux)
+   # This tool can install compilers, package managers (including Chocolatey), and build systems
+   npx setup-cpp --compiler msvc --cmake true --pkg-config true --choco true
    ```
 
 2. **Install GStreamer 1.26.2:**
@@ -146,13 +231,46 @@ gst-launch-1.0 --version
 **Verification:**
 
 ```powershell
-# Verify GStreamer installation
-gst-launch-1.0 --version
+# Verify pkg-config can find GStreamer (most important for building)
+pkg-config --exists gstreamer-1.0; if ($LASTEXITCODE -eq 0) { Write-Host "GStreamer found" } else { Write-Host "GStreamer NOT found" }
 pkg-config --cflags --libs gstreamer-1.0
 
 # Verify CMake installation
 cmake --version
 ```
+
+**Windows-Specific Troubleshooting:**
+
+If you encounter build errors after installation, try these common fixes:
+
+1. **PKG_CONFIG_PATH Issues:**
+
+   ```powershell
+   # If GStreamer was installed to default location but pkg-config can't find it:
+   setx PKG_CONFIG_PATH "C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig"
+   
+   # Restart your terminal/command prompt after setting this variable
+   # Verify the fix:
+   pkg-config --exists gstreamer-1.0; if ($LASTEXITCODE -eq 0) { Write-Host "GStreamer found" } else { Write-Host "GStreamer NOT found" }
+   ```
+
+2. **Missing pkg-config:**
+
+   ```powershell
+   # pkg-config is absolutely required - install if missing:
+   choco install pkgconfiglite
+   
+   # Or refresh your PATH if already installed:
+   refreshenv
+   ```
+
+3. **GStreamer Location Mismatch:**
+
+   ```powershell
+   # If GStreamer was installed to a different location, update PKG_CONFIG_PATH accordingly:
+   # For example, if installed to C:\gstreamer:
+   setx PKG_CONFIG_PATH "C:\gstreamer\1.0\msvc_x86_64\lib\pkgconfig"
+   ```
 
 ### Common Installation Issues
 
@@ -169,12 +287,18 @@ brew install gstreamer pkg-config
 export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 # Windows (PowerShell)
+# Ensure pkg-config is installed:
+choco install pkgconfiglite
+
 # Ensure environment variables are set correctly:
 # GSTREAMER_1_0_ROOT_MSVC_X86_64=C:\Program Files\gstreamer\1.0\msvc_x86_64
 # PKG_CONFIG_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig
 
+# If GStreamer is installed but pkg-config can't find it, set PKG_CONFIG_PATH:
+setx PKG_CONFIG_PATH "C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig"
+
 # Verify pkg-config can find GStreamer
-pkg-config --exists gstreamer-1.0 && echo "GStreamer found" || echo "GStreamer NOT found"
+pkg-config --exists gstreamer-1.0; if ($LASTEXITCODE -eq 0) { Write-Host "GStreamer found" } else { Write-Host "GStreamer NOT found" }
 ```
 
 #### Problem: Missing plugins (playbin/decodebin errors)
@@ -696,123 +820,60 @@ const srcPad = selector?.getPad('src');
 console.log('Pad info:', srcPad?.name, srcPad?.direction, srcPad?.caps);
 ```
 
-## Complete Feature Set
+## API Reference
 
-### Core Pipeline Features
+### Pipeline Class
 
-- **Pipeline Management**: Create, play, pause, stop GStreamer pipelines
-- **State Management**: Comprehensive state change handling with detailed results
-- **Element Access**: Get elements by name with proper typing
-- **Property System**: Get/set element properties with type safety
-
-### Advanced Data Access
-
-- **App Sources & Sinks**: Two approaches for data access:
-  - **Pull-based**: Explicitly request samples with `getSample()` (async, controlled timing)
-  - **Push-based**: Reactive callbacks with `onSample()` (automatic, real-time)
-- **Pad Probes**: Add/remove event-driven callbacks to intercept comprehensive buffer data
-- **Buffer Analysis**: Extract raw data, timing information, flags, caps, and metadata
-
-### Media Processing
-
-- **RTP Support**: Extract RTP metadata including timestamps, sequence numbers, SSRC, payload type
-- **Seeking**: Frame-accurate seeking with success feedback
-- **Query System**: Position and duration queries in seconds
-- **Message Bus**: Handle GStreamer messages (EOS, errors, warnings, state changes)
-
-### Runtime Features
-
-- **Multi-format Support**: Video, audio, containers, streaming protocols
-- **Codec Support**: H.264, H.265, VP8, VP9, AV1, and more through GStreamer plugins
-- **Network Streaming**: RTP, RTSP, HLS, DASH, WebRTC protocols
-- **Hardware Acceleration**: GPU-accelerated encoding/decoding where available
-
-## Build System & Tools
-
-### Native Code (C++)
-
-- **CMake**: Modern build system with proper dependency detection
-- **N-API**: Node-API for runtime-independent native bindings
-- **GStreamer Integration**: Full integration with GStreamer 1.0 ecosystem
-- **Compiler Support**: GCC, Clang with C++17 standard
-
-### TypeScript/JavaScript
-
-- **Rollup**: Module bundler generating both ESM and CJS outputs
-- **TypeScript**: Full type definitions and compilation
-- **Dual Packaging**: Supports both `import` and `require` statements
-- **Source Maps**: Full debugging support
-
-### Testing & Quality
-
-- **Vitest**: Modern, fast test runner with concurrent execution
-- **ESLint**: Code linting with TypeScript support
-- **Prettier**: Code formatting
-- **Coverage**: Built-in test coverage reporting
-
-## Project Structure
-
-```txt
-gst-kit/
-├── src/
-│   ├── cpp/                   # C++ native implementation
-│   │   ├── addon.cpp          # N-API module entry point
-│   │   ├── pipeline.cpp       # Pipeline class implementation
-│   │   ├── element.cpp        # Element class implementation
-│   │   ├── async-workers.cpp  # Async operation workers
-│   │   └── type-conversion.cpp # Type conversion utilities
-│   └── ts/                    # TypeScript implementation
-│       ├── index.ts           # Main API exports and types
-│       └── *.test.ts          # Comprehensive test suite
-├── examples/                  # Usage examples
-│   ├── basic-pipeline.mjs     # Simple pipeline example
-│   ├── appsink.mjs           # AppSink usage
-│   ├── appsrc.mjs            # AppSrc usage
-│   ├── appsrc-eos.mjs        # AppSrc with end-of-stream
-│   ├── record-to-file.mjs    # Recording to file example
-│   ├── rtp-timestamp.mjs     # RTP handling
-│   ├── bus.mjs               # Message bus handling
-│   ├── seek.mjs              # Seeking functionality
-│   ├── query.mjs             # Position/duration queries
-│   ├── set-pad.mjs           # Pad manipulation
-│   ├── fakesink.mjs          # Fakesink usage
-│   └── glshader.mjs          # OpenGL shader example
-├── build/                     # CMake build output
-├── dist/                      # Rollup build output
-│   ├── esm/                  # ES modules
-│   ├── cjs/                  # CommonJS modules
-│   └── index.d.ts            # Type definitions
-├── scripts/                   # Build and utility scripts
-├── CMakeLists.txt            # CMake configuration
-├── rollup.config.mjs         # Rollup bundler configuration
-├── vitest.config.ts          # Vitest test configuration
-├── tsconfig.json             # TypeScript configuration
-└── package.json              # Node.js package configuration
+```typescript
+class Pipeline {
+  constructor(description: string)
+  
+  // State management
+  play(timeoutMs?: number): Promise<StateChangeResult>
+  pause(timeoutMs?: number): Promise<StateChangeResult>
+  stop(timeoutMs?: number): Promise<StateChangeResult>
+  playing(): boolean
+  
+  // Element access
+  getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null
+  
+  // Position and seeking
+  queryPosition(): number
+  queryDuration(): number
+  seek(positionSeconds: number): boolean
+  
+  // Message handling
+  busPop(timeoutMs?: number): Promise<GstMessage | null>
+}
 ```
 
-### Contributing Guide
+### Element Types
 
-#### For TypeScript/JavaScript changes
+```typescript
+// Base element with common functionality
+interface Element {
+  readonly type: "element"
+  getElementProperty(key: string): GStreamerPropertyResult
+  setElementProperty(key: string, value: GStreamerPropertyValue): void
+  addPadProbe(padName: string, callback: (bufferData: BufferData) => void): () => void
+  setPad(attribute: string, padName: string): void
+  getPad(padName: string): GstPad | null
+}
 
-- Edit files in `src/ts/`
-- Add tests alongside implementation
-- Run `npm run test:unit` for testing
-- Build with `npm run build:ts`
+// AppSink element for receiving data
+interface AppSinkElement extends Element {
+  readonly type: "app-sink-element"
+  getSample(timeoutMs?: number): Promise<GStreamerSample | null>
+  onSample(callback: (sample: GStreamerSample) => void): () => void
+}
 
-#### For C++ native changes
-
-- Edit files in `src/cpp/`
-- Update CMakeLists.txt if adding new files
-- Build with `npm run build:native`
-- Test with full `npm test`
-
-#### For new features
-
-1. Add implementation in appropriate `src/` directory
-2. Add comprehensive tests in `src/ts/*.test.ts`
-3. Add usage example in `examples/`
-4. Update type definitions in `src/ts/index.ts`
-5. Update documentation in README.md
+// AppSrc element for providing data
+interface AppSrcElement extends Element {
+  readonly type: "app-src-element"
+  push(buffer: Buffer, pts?: Buffer | number): void
+  endOfStream(): void
+}
+```
 
 ## Buffer Flags Reference
 
@@ -896,59 +957,67 @@ if (sampleResult?.type === 'sample') {
 }
 ```
 
-## API Reference
+## Build System & Tools
 
-### Pipeline Class
+### Native Code (C++)
 
-```typescript
-class Pipeline {
-  constructor(description: string)
-  
-  // State management
-  play(timeoutMs?: number): Promise<StateChangeResult>
-  pause(timeoutMs?: number): Promise<StateChangeResult>
-  stop(timeoutMs?: number): Promise<StateChangeResult>
-  playing(): boolean
-  
-  // Element access
-  getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null
-  
-  // Position and seeking
-  queryPosition(): number
-  queryDuration(): number
-  seek(positionSeconds: number): boolean
-  
-  // Message handling
-  busPop(timeoutMs?: number): Promise<GstMessage | null>
-}
-```
+- **CMake**: Modern build system with proper dependency detection
+- **N-API**: Node-API for runtime-independent native bindings
+- **GStreamer Integration**: Full integration with GStreamer 1.0 ecosystem
+- **Compiler Support**: GCC, Clang with C++17 standard
 
-### Element Types
+### TypeScript/JavaScript
 
-```typescript
-// Base element with common functionality
-interface Element {
-  readonly type: "element"
-  getElementProperty(key: string): GStreamerPropertyResult
-  setElementProperty(key: string, value: GStreamerPropertyValue): void
-  addPadProbe(padName: string, callback: (bufferData: BufferData) => void): () => void
-  setPad(attribute: string, padName: string): void
-  getPad(padName: string): GstPad | null
-}
+- **Rollup**: Module bundler generating both ESM and CJS outputs
+- **TypeScript**: Full type definitions and compilation
+- **Dual Packaging**: Supports both `import` and `require` statements
+- **Source Maps**: Full debugging support
 
-// AppSink element for receiving data
-interface AppSinkElement extends Element {
-  readonly type: "app-sink-element"
-  getSample(timeoutMs?: number): Promise<GStreamerSample | null>
-  onSample(callback: (sample: GStreamerSample) => void): () => void
-}
+### Testing & Quality
 
-// AppSrc element for providing data
-interface AppSrcElement extends Element {
-  readonly type: "app-src-element"
-  push(buffer: Buffer, pts?: Buffer | number): void
-  endOfStream(): void
-}
+- **Vitest**: Modern, fast test runner with concurrent execution
+- **ESLint**: Code linting with TypeScript support
+- **Prettier**: Code formatting
+- **Coverage**: Built-in test coverage reporting
+
+## Project Structure
+
+```txt
+gst-kit/
+├── src/
+│   ├── cpp/                   # C++ native implementation
+│   │   ├── addon.cpp          # N-API module entry point
+│   │   ├── pipeline.cpp       # Pipeline class implementation
+│   │   ├── element.cpp        # Element class implementation
+│   │   ├── async-workers.cpp  # Async operation workers
+│   │   └── type-conversion.cpp # Type conversion utilities
+│   └── ts/                    # TypeScript implementation
+│       ├── index.ts           # Main API exports and types
+│       └── *.test.ts          # Comprehensive test suite
+├── examples/                  # Usage examples
+│   ├── basic-pipeline.mjs     # Simple pipeline example
+│   ├── appsink.mjs           # AppSink usage
+│   ├── appsrc.mjs            # AppSrc usage
+│   ├── appsrc-eos.mjs        # AppSrc with end-of-stream
+│   ├── record-to-file.mjs    # Recording to file example
+│   ├── rtp-timestamp.mjs     # RTP handling
+│   ├── bus.mjs               # Message bus handling
+│   ├── seek.mjs              # Seeking functionality
+│   ├── query.mjs             # Position/duration queries
+│   ├── set-pad.mjs           # Pad manipulation
+│   ├── fakesink.mjs          # Fakesink usage
+│   └── glshader.mjs          # OpenGL shader example
+├── build/                     # CMake build output
+├── dist/                      # Rollup build output
+│   ├── esm/                  # ES modules
+│   ├── cjs/                  # CommonJS modules
+│   └── index.d.ts            # Type definitions
+├── scripts/                   # Build and utility scripts
+├── CMakeLists.txt            # CMake configuration
+├── rollup.config.mjs         # Rollup bundler configuration
+├── vitest.config.ts          # Vitest test configuration
+├── tsconfig.json             # TypeScript configuration
+└── package.json              # Node.js package configuration
 ```
 
 ## Performance Considerations
