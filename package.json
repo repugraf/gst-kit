@@ -1,6 +1,6 @@
 {
   "name": "gst-kit",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "type": "module",
   "exports": {
     ".": {
@@ -71,7 +71,10 @@
   },
   "overrides": {
     "cmake-js": {
-      "axios": "1.11.0"
+      "axios": "1.12.0"
+    },
+    "vitest": {
+      "vite": "7.1.5"
     }
   }
 }
