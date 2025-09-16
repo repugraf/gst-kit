@@ -298,6 +298,16 @@ namespace TypeConversion {
         // Handle GstStructure (like stats property)
         const GstStructure *structure = GST_STRUCTURE(boxed_value);
         return gst_structure_to_js(env, structure);
+      } else if (boxed_value && g_type_is_a(G_VALUE_TYPE(gvalue), G_TYPE_BOXED)) {
+        // Try casting to GValueArray
+        GValueArray *arr = static_cast<GValueArray *>(boxed_value);
+        if (arr->n_values > 0) { // sanity check
+          Napi::Array jsArr = Napi::Array::New(env, arr->n_values);
+          for (guint i = 0; i < arr->n_values; i++) {
+            jsArr.Set(i, gvalue_to_js(env, &arr->values[i]));
+          }
+          return jsArr;
+        }
       }
     }
 
