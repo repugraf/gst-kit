@@ -16,12 +16,9 @@ const compat = new FlatCompat({
 });
 
 export default defineConfig([
+  ...compat.extends("eslint:recommended", "plugin:@typescript-eslint/recommended"),
   {
-    extends: compat.extends("eslint:recommended", "plugin:@typescript-eslint/recommended"),
-
-    plugins: {
-      "@typescript-eslint": typescriptEslint,
-    },
+    plugins: { "@typescript-eslint": typescriptEslint },
 
     languageOptions: {
       globals: {
@@ -37,6 +34,8 @@ export default defineConfig([
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-explicit-any": "off",
     },
+  },
+  {
     ignores: [
       "**/*.d.ts",
       "dist/**/*",
