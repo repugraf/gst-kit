@@ -21,8 +21,8 @@
     "test": "npm run test:node && npm run test:unit",
     "prepublishOnly": "npm run build:ts",
     "postinstall": "node scripts/ensure-native-addon.mjs",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "keywords": [

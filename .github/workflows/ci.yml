@@ -57,6 +57,9 @@ jobs:
     
     - name: Build project
       run: npm run build
+
+    - name: Lint code
+      run: npm run lint
     
     - name: Run Node.js tests
       run: npm run test:node

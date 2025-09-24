@@ -185,11 +185,11 @@ gst-launch-1.0 --version
    ```powershell
    # Install Visual Studio Build Tools 2019/2022 (Community edition is free)
    # Download from: https://visualstudio.microsoft.com/downloads/
-   
+
    # Install CMake
    # Download from: https://cmake.org/download/
    # Or via chocolatey: choco install cmake
-   
+
    # Install pkg-config (REQUIRED for build to work)
    choco install pkgconfiglite
    ```
@@ -207,11 +207,11 @@ gst-launch-1.0 --version
    ```powershell
    # Download both runtime and development MSI packages from:
    # https://gstreamer.freedesktop.org/download/
-   
+
    # For 64-bit systems, download and install:
    # - gstreamer-1.0-msvc-x86_64-1.26.2.msi (runtime)
    # - gstreamer-1.0-devel-msvc-x86_64-1.26.2.msi (development)
-   
+
    # Install both MSI files by double-clicking or using:
    # msiexec /i gstreamer-1.0-msvc-x86_64-1.26.2.msi /quiet
    # msiexec /i gstreamer-1.0-devel-msvc-x86_64-1.26.2.msi /quiet
@@ -222,7 +222,7 @@ gst-launch-1.0 --version
    ```powershell
    # Add to system PATH (via System Properties → Environment Variables):
    C:\Program Files\gstreamer\1.0\msvc_x86_64\bin
-   
+
    # Add system environment variables:
    GSTREAMER_1_0_ROOT_MSVC_X86_64=C:\Program Files\gstreamer\1.0\msvc_x86_64
    PKG_CONFIG_PATH=C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig
@@ -248,7 +248,7 @@ If you encounter build errors after installation, try these common fixes:
    ```powershell
    # If GStreamer was installed to default location but pkg-config can't find it:
    setx PKG_CONFIG_PATH "C:\Program Files\gstreamer\1.0\msvc_x86_64\lib\pkgconfig"
-   
+
    # Restart your terminal/command prompt after setting this variable
    # Verify the fix:
    pkg-config --exists gstreamer-1.0; if ($LASTEXITCODE -eq 0) { Write-Host "GStreamer found" } else { Write-Host "GStreamer NOT found" }
@@ -259,7 +259,7 @@ If you encounter build errors after installation, try these common fixes:
    ```powershell
    # pkg-config is absolutely required - install if missing:
    choco install pkgconfiglite
-   
+
    # Or refresh your PATH if already installed:
    refreshenv
    ```
@@ -362,9 +362,9 @@ RUN npm run build
 ### Basic Pipeline
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc ! autovideosink');
+const pipeline = new Pipeline("videotestsrc ! autovideosink");
 await pipeline.play();
 
 // Stop after 5 seconds
@@ -376,21 +376,21 @@ setTimeout(async () => {
 ### Working with AppSink (Pull-based Approach)
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink');
-const sink = pipeline.getElementByName('sink');
+const pipeline = new Pipeline("videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink");
+const sink = pipeline.getElementByName("sink");
 
-if (sink?.type === 'app-sink-element') {
+if (sink?.type === "app-sink-element") {
   await pipeline.play();
-  
+
   while (true) {
     const sample = await sink.getSample(); // Explicitly request samples
     if (!sample) break;
-  
-    console.log('Received frame:', sample.buffer?.length, 'bytes');
+
+    console.log("Received frame:", sample.buffer?.length, "bytes");
   }
-  
+
   await pipeline.stop();
 }
 ```
@@ -398,19 +398,19 @@ if (sink?.type === 'app-sink-element') {
 ### Working with AppSink (Event-Driven/Push Approach)
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink');
-const sink = pipeline.getElementByName('sink');
+const pipeline = new Pipeline("videotestsrc num-buffers=10 ! videoconvert ! appsink name=sink");
+const sink = pipeline.getElementByName("sink");
 
-if (sink?.type === 'app-sink-element') {
+if (sink?.type === "app-sink-element") {
   let frameCount = 0;
-  
+
   // Set up reactive callback - samples are pushed automatically
-  const unsubscribe = sink.onSample((sample) => {
+  const unsubscribe = sink.onSample(sample => {
     frameCount++;
-    console.log(`Frame ${frameCount}:`, sample.buffer?.length, 'bytes');
-  
+    console.log(`Frame ${frameCount}:`, sample.buffer?.length, "bytes");
+
     if (frameCount === 10) {
       unsubscribe();
       pipeline.stop();
@@ -424,17 +424,17 @@ if (sink?.type === 'app-sink-element') {
 ### Working with AppSrc (Source Input)
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('appsrc name=source ! videoconvert ! autovideosink');
-const source = pipeline.getElementByName('source');
+const pipeline = new Pipeline("appsrc name=source ! videoconvert ! autovideosink");
+const source = pipeline.getElementByName("source");
 
-if (source?.type === 'app-src-element') {
-  source.setElementProperty('caps', 'video/x-raw,format=RGB,width=320,height=240');
-  source.setElementProperty('is-live', true);
-  
+if (source?.type === "app-src-element") {
+  source.setElementProperty("caps", "video/x-raw,format=RGB,width=320,height=240");
+  source.setElementProperty("is-live", true);
+
   await pipeline.play();
-  
+
   // Push random RGB frames
   setInterval(() => {
     const buffer = Buffer.alloc(320 * 240 * 3);
@@ -449,8 +449,8 @@ if (source?.type === 'app-src-element') {
 Use AppSrc with EOS when you need to process data that can't be handled by standard GStreamer elements like `filesrc`:
 
 ```javascript
-import { Pipeline } from 'gst-kit';
-import { createReadStream } from 'fs';
+import { Pipeline } from "gst-kit";
+import { createReadStream } from "fs";
 
 // Real-world scenarios where AppSrc + EOS is needed:
 // 1. Custom encrypted file formats
@@ -460,66 +460,66 @@ import { createReadStream } from 'fs';
 // 5. Multi-source aggregation
 
 async function streamEncryptedVideoFile(encryptedFilePath) {
-  const pipeline = new Pipeline('appsrc name=source ! h264parse ! avdec_h264 ! autovideosink');
-  const source = pipeline.getElementByName('source');
+  const pipeline = new Pipeline("appsrc name=source ! h264parse ! avdec_h264 ! autovideosink");
+  const source = pipeline.getElementByName("source");
 
-  if (source?.type === 'app-src-element') {
-    source.setElementProperty('caps', 'video/x-h264,stream-format=byte-stream');
-    source.setElementProperty('is-live', false); // File-like behavior
-    
+  if (source?.type === "app-src-element") {
+    source.setElementProperty("caps", "video/x-h264,stream-format=byte-stream");
+    source.setElementProperty("is-live", false); // File-like behavior
+
     await pipeline.play();
-    
+
     // Read and decrypt file chunks
     const encryptedStream = createReadStream(encryptedFilePath);
-    
+
     for await (const encryptedChunk of encryptedStream) {
       // Decrypt the chunk (your custom decryption logic)
       const decryptedBuffer = await decryptChunk(encryptedChunk);
       source.push(decryptedBuffer);
     }
-    
+
     // IMPORTANT: Signal end-of-stream when file is fully processed
     source.endOfStream();
-    
+
     // Wait for natural completion
     while (true) {
       const message = await pipeline.busPop(1000);
-      if (message?.type === 'eos') {
-        console.log('Encrypted file playback completed');
+      if (message?.type === "eos") {
+        console.log("Encrypted file playback completed");
         break;
       }
     }
-    
+
     await pipeline.stop();
   }
 }
 
 // Example: Stream from database BLOB
 async function streamFromDatabase(mediaId) {
-  const pipeline = new Pipeline('appsrc name=source ! decodebin ! autovideosink');
-  const source = pipeline.getElementByName('source');
+  const pipeline = new Pipeline("appsrc name=source ! decodebin ! autovideosink");
+  const source = pipeline.getElementByName("source");
 
-  if (source?.type === 'app-src-element') {
+  if (source?.type === "app-src-element") {
     // Note: Let decodebin auto-detect format
-    source.setElementProperty('is-live', false);
-    
+    source.setElementProperty("is-live", false);
+
     await pipeline.play();
-    
+
     // Stream media data from database in chunks
     const mediaChunks = await fetchMediaFromDatabase(mediaId);
-    
+
     for (const chunk of mediaChunks) {
       source.push(chunk);
     }
-    
+
     source.endOfStream(); // Signal completion
-    
+
     // Handle completion
     while (true) {
       const message = await pipeline.busPop(1000);
-      if (message?.type === 'eos') break;
+      if (message?.type === "eos") break;
     }
-    
+
     await pipeline.stop();
   }
 }
@@ -541,13 +541,13 @@ async function fetchMediaFromDatabase(mediaId) {
 For recording programmatically generated content (procedural video, custom visualizations, etc.) to video files:
 
 ```javascript
-import { Pipeline } from 'gst-kit';
-import path from 'path';
-import fs from 'fs';
+import { Pipeline } from "gst-kit";
+import path from "path";
+import fs from "fs";
 
 async function recordGeneratedVideoToFile() {
-  const outputFile = path.join(process.cwd(), 'recording.ogv');
-  
+  const outputFile = path.join(process.cwd(), "recording.ogv");
+
   // Remove existing file if it exists
   if (fs.existsSync(outputFile)) {
     fs.unlinkSync(outputFile);
@@ -562,14 +562,14 @@ async function recordGeneratedVideoToFile() {
     filesink location=${outputFile}
   `);
 
-  const appsrc = pipeline.getElementByName('mysource');
+  const appsrc = pipeline.getElementByName("mysource");
 
-  if (appsrc?.type === 'app-src-element') {
+  if (appsrc?.type === "app-src-element") {
     // Configure for file recording (not live streaming)
-    appsrc.setElementProperty('caps', 'video/x-raw,format=RGB,width=640,height=480,framerate=30/1');
-    appsrc.setElementProperty('format', 'time');
-    appsrc.setElementProperty('is-live', false);
-    appsrc.setElementProperty('do-timestamp', true);
+    appsrc.setElementProperty("caps", "video/x-raw,format=RGB,width=640,height=480,framerate=30/1");
+    appsrc.setElementProperty("format", "time");
+    appsrc.setElementProperty("is-live", false);
+    appsrc.setElementProperty("do-timestamp", true);
 
     await pipeline.play();
 
@@ -583,7 +583,7 @@ async function recordGeneratedVideoToFile() {
       // Generate frame data (replace with your content generation logic)
       const buffer = generateFrame(i, width, height);
       appsrc.push(buffer);
-      
+
       if (i % 30 === 0) {
         console.log(`📹 Recorded ${i} frames (${i / 30} seconds)`);
       }
@@ -596,18 +596,18 @@ async function recordGeneratedVideoToFile() {
     while (true) {
       const message = await pipeline.busPop(1000);
       if (!message) continue;
-      
-      if (message.type === 'eos') {
-        console.log('🎉 Recording completed!');
+
+      if (message.type === "eos") {
+        console.log("🎉 Recording completed!");
         break;
-      } else if (message.type === 'error') {
-        console.error('❌ Recording error:', message.message);
+      } else if (message.type === "error") {
+        console.error("❌ Recording error:", message.message);
         break;
       }
     }
 
     await pipeline.stop();
-    
+
     // Verify file was created
     if (fs.existsSync(outputFile)) {
       const stats = fs.statSync(outputFile);
@@ -622,13 +622,13 @@ function generateFrame(frameNumber, width, height) {
   const red = (frameNumber * 5) % 256;
   const green = (frameNumber * 3) % 256;
   const blue = (frameNumber * 7) % 256;
-  
+
   for (let i = 0; i < buffer.length; i += 3) {
-    buffer[i] = red;     // R
+    buffer[i] = red; // R
     buffer[i + 1] = green; // G
-    buffer[i + 2] = blue;  // B
+    buffer[i + 2] = blue; // B
   }
-  
+
   return buffer;
 }
 
@@ -647,46 +647,48 @@ recordGeneratedVideoToFile();
 ### Extracting Buffer Data with Pad Probes
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
 const pipeline = new Pipeline(
-  'videotestsrc ! videoconvert ! x264enc ! rtph264pay name=pay ! fakesink'
+  "videotestsrc ! videoconvert ! x264enc ! rtph264pay name=pay ! fakesink"
 );
-const payloader = pipeline.getElementByName('pay');
+const payloader = pipeline.getElementByName("pay");
 
 if (payloader) {
   // Add probe to capture comprehensive buffer data from pad
-  const unsubscribe = payloader.addPadProbe('src', (bufferData) => {
-    console.log('Buffer Data:', {
+  const unsubscribe = payloader.addPadProbe("src", bufferData => {
+    console.log("Buffer Data:", {
       // Raw buffer data
       buffer: bufferData.buffer, // Buffer object with raw data
       size: bufferData.buffer?.length, // Buffer size in bytes
-  
+
       // Timing information (nanoseconds)
-      pts: bufferData.pts,       // Presentation timestamp
-      dts: bufferData.dts,       // Decode timestamp
+      pts: bufferData.pts, // Presentation timestamp
+      dts: bufferData.dts, // Decode timestamp
       duration: bufferData.duration,
       offset: bufferData.offset,
       offsetEnd: bufferData.offsetEnd,
-  
+
       // Buffer metadata
-      flags: bufferData.flags,   // GStreamer buffer flags
-  
+      flags: bufferData.flags, // GStreamer buffer flags
+
       // Stream format information
-      caps: bufferData.caps,     // Caps object with format details
-  
+      caps: bufferData.caps, // Caps object with format details
+
       // RTP data (only for RTP streams)
-      rtp: bufferData.rtp ? {
-        timestamp: bufferData.rtp.timestamp,
-        sequence: bufferData.rtp.sequence,
-        ssrc: bufferData.rtp.ssrc,
-        payloadType: bufferData.rtp.payloadType
-      } : undefined
+      rtp: bufferData.rtp
+        ? {
+            timestamp: bufferData.rtp.timestamp,
+            sequence: bufferData.rtp.sequence,
+            ssrc: bufferData.rtp.ssrc,
+            payloadType: bufferData.rtp.payloadType,
+          }
+        : undefined,
     });
   });
 
   await pipeline.play();
-  
+
   // ... later, remove the probe
   unsubscribe();
   await pipeline.stop();
@@ -696,17 +698,17 @@ if (payloader) {
 ### Pipeline State Management
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc ! autovideosink');
+const pipeline = new Pipeline("videotestsrc ! autovideosink");
 
 // State change operations return detailed results
 const playResult = await pipeline.play();
-console.log('Play result:', playResult.result); // 'success', 'async', 'failure', etc.
-console.log('Current state:', playResult.finalState);
+console.log("Play result:", playResult.result); // 'success', 'async', 'failure', etc.
+console.log("Current state:", playResult.finalState);
 
 // Check if pipeline is playing
-console.log('Is playing:', pipeline.playing());
+console.log("Is playing:", pipeline.playing());
 
 // Pause and resume
 await pipeline.pause();
@@ -719,9 +721,9 @@ await pipeline.stop();
 ### Position and Duration Queries
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc ! timeoverlay ! autovideosink');
+const pipeline = new Pipeline("videotestsrc ! timeoverlay ! autovideosink");
 await pipeline.play();
 
 setInterval(() => {
@@ -734,36 +736,36 @@ setInterval(() => {
 ### Seeking
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc ! timeoverlay ! autovideosink');
+const pipeline = new Pipeline("videotestsrc ! timeoverlay ! autovideosink");
 await pipeline.play();
 
 // Seek to 60 seconds
 const seekSuccess = pipeline.seek(60);
-console.log('Seek successful:', seekSuccess);
+console.log("Seek successful:", seekSuccess);
 ```
 
 ### Message Bus Handling
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc num-buffers=100 ! autovideosink');
+const pipeline = new Pipeline("videotestsrc num-buffers=100 ! autovideosink");
 await pipeline.play();
 
 // Listen for bus messages
 while (true) {
   const message = await pipeline.busPop(1000); // 1 second timeout
-  
+
   if (message) {
-    console.log('Message:', message.type, message.srcElementName);
-  
-    if (message.type === 'eos') {
-      console.log('End of stream');
+    console.log("Message:", message.type, message.srcElementName);
+
+    if (message.type === "eos") {
+      console.log("End of stream");
       break;
-    } else if (message.type === 'error') {
-      console.error('Error:', message.errorMessage);
+    } else if (message.type === "error") {
+      console.error("Error:", message.errorMessage);
       break;
     }
   }
@@ -773,23 +775,23 @@ while (true) {
 ### Element Property Manipulation
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
-const pipeline = new Pipeline('videotestsrc name=source ! capsfilter name=filter ! autovideosink');
+const pipeline = new Pipeline("videotestsrc name=source ! capsfilter name=filter ! autovideosink");
 
-const source = pipeline.getElementByName('source');
-const filter = pipeline.getElementByName('filter');
+const source = pipeline.getElementByName("source");
+const filter = pipeline.getElementByName("filter");
 
 // Set various property types
-source?.setElementProperty('pattern', 'ball');
-source?.setElementProperty('is-live', true);
-source?.setElementProperty('num-buffers', 100);
+source?.setElementProperty("pattern", "ball");
+source?.setElementProperty("is-live", true);
+source?.setElementProperty("num-buffers", 100);
 
-filter?.setElementProperty('caps', 'video/x-raw,width=1280,height=720,framerate=30/1');
+filter?.setElementProperty("caps", "video/x-raw,width=1280,height=720,framerate=30/1");
 
 // Get property values
-const patternResult = source?.getElementProperty('pattern');
-const capsResult = filter?.getElementProperty('caps');
+const patternResult = source?.getElementProperty("pattern");
+const capsResult = filter?.getElementProperty("caps");
 
 // Access the actual values using the standardized format
 const pattern = patternResult?.value;
@@ -799,25 +801,25 @@ const caps = capsResult?.value;
 ### Pad Manipulation
 
 ```javascript
-import { Pipeline } from 'gst-kit';
+import { Pipeline } from "gst-kit";
 
 const pipeline = new Pipeline(
-  'input-selector name=sel ! autovideosink videotestsrc pattern=0 ! sel.sink_0 videotestsrc pattern=1 ! sel.sink_1'
+  "input-selector name=sel ! autovideosink videotestsrc pattern=0 ! sel.sink_0 videotestsrc pattern=1 ! sel.sink_1"
 );
 
-const selector = pipeline.getElementByName('sel');
+const selector = pipeline.getElementByName("sel");
 await pipeline.play();
 
 // Switch between input pads
 setInterval(() => {
-  const activePad = Math.random() > 0.5 ? 'sink_0' : 'sink_1';
-  selector?.setPad('active-pad', activePad);
-  console.log('Switched to:', activePad);
+  const activePad = Math.random() > 0.5 ? "sink_0" : "sink_1";
+  selector?.setPad("active-pad", activePad);
+  console.log("Switched to:", activePad);
 }, 2000);
 
 // Get pad information
-const srcPad = selector?.getPad('src');
-console.log('Pad info:', srcPad?.name, srcPad?.direction, srcPad?.caps);
+const srcPad = selector?.getPad("src");
+console.log("Pad info:", srcPad?.name, srcPad?.direction, srcPad?.caps);
 ```
 
 ## API Reference
@@ -826,24 +828,24 @@ console.log('Pad info:', srcPad?.name, srcPad?.direction, srcPad?.caps);
 
 ```typescript
 class Pipeline {
-  constructor(description: string)
-  
+  constructor(description: string);
+
   // State management
-  play(timeoutMs?: number): Promise<StateChangeResult>
-  pause(timeoutMs?: number): Promise<StateChangeResult>
-  stop(timeoutMs?: number): Promise<StateChangeResult>
-  playing(): boolean
-  
+  play(timeoutMs?: number): Promise<StateChangeResult>;
+  pause(timeoutMs?: number): Promise<StateChangeResult>;
+  stop(timeoutMs?: number): Promise<StateChangeResult>;
+  playing(): boolean;
+
   // Element access
-  getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null
-  
+  getElementByName(name: string): Element | AppSinkElement | AppSrcElement | null;
+
   // Position and seeking
-  queryPosition(): number
-  queryDuration(): number
-  seek(positionSeconds: number): boolean
-  
+  queryPosition(): number;
+  queryDuration(): number;
+  seek(positionSeconds: number): boolean;
+
   // Message handling
-  busPop(timeoutMs?: number): Promise<GstMessage | null>
+  busPop(timeoutMs?: number): Promise<GstMessage | null>;
 }
 ```
 
@@ -852,41 +854,41 @@ class Pipeline {
 ```typescript
 // Base element with common functionality
 interface Element {
-  readonly type: "element"
-  getElementProperty(key: string): GStreamerPropertyResult
-  setElementProperty(key: string, value: GStreamerPropertyValue): void
-  addPadProbe(padName: string, callback: (bufferData: BufferData) => void): () => void
-  setPad(attribute: string, padName: string): void
-  getPad(padName: string): GstPad | null
+  readonly type: "element";
+  getElementProperty(key: string): GStreamerPropertyResult;
+  setElementProperty(key: string, value: GStreamerPropertyValue): void;
+  addPadProbe(padName: string, callback: (bufferData: BufferData) => void): () => void;
+  setPad(attribute: string, padName: string): void;
+  getPad(padName: string): GstPad | null;
 }
 
 // AppSink element for receiving data
 interface AppSinkElement extends Element {
-  readonly type: "app-sink-element"
-  getSample(timeoutMs?: number): Promise<GStreamerSample | null>
-  onSample(callback: (sample: GStreamerSample) => void): () => void
+  readonly type: "app-sink-element";
+  getSample(timeoutMs?: number): Promise<GStreamerSample | null>;
+  onSample(callback: (sample: GStreamerSample) => void): () => void;
 }
 
 // AppSrc element for providing data
 interface AppSrcElement extends Element {
-  readonly type: "app-src-element"
-  push(buffer: Buffer, pts?: Buffer | number): void
-  endOfStream(): void
+  readonly type: "app-src-element";
+  push(buffer: Buffer, pts?: Buffer | number): void;
+  endOfStream(): void;
 }
 ```
 
 ## Buffer Flags Reference
 
 ```javascript
-import { GstBufferFlags } from 'gst-kit';
+import { GstBufferFlags } from "gst-kit";
 
 // Check buffer flags
 if (bufferData.flags & GstBufferFlags.GST_BUFFER_FLAG_DELTA_UNIT) {
-  console.log('This is a delta frame (not a keyframe)');
+  console.log("This is a delta frame (not a keyframe)");
 }
 
 if (bufferData.flags & GstBufferFlags.GST_BUFFER_FLAG_HEADER) {
-  console.log('This buffer contains header data');
+  console.log("This buffer contains header data");
 }
 ```
 
@@ -907,13 +909,13 @@ The `getElementProperty()` method returns a standardized object with type inform
 
 ```javascript
 // Property result format
-const result = element.getElementProperty('property-name');
+const result = element.getElementProperty("property-name");
 
 if (result === null) {
-  console.log('Property value is null');
+  console.log("Property value is null");
 } else {
-  console.log('Property type:', result.type);  // "primitive" | "array" | "object" | "buffer" | "sample"
-  console.log('Property value:', result.value); // The actual value
+  console.log("Property type:", result.type); // "primitive" | "array" | "object" | "buffer" | "sample"
+  console.log("Property value:", result.value); // The actual value
 }
 ```
 
@@ -929,30 +931,30 @@ if (result === null) {
 
 ```javascript
 // String property
-const patternResult = videotestsrc.getElementProperty('pattern');
-if (patternResult?.type === 'primitive') {
-  console.log('Pattern:', patternResult.value); // e.g., "ball"
+const patternResult = videotestsrc.getElementProperty("pattern");
+if (patternResult?.type === "primitive") {
+  console.log("Pattern:", patternResult.value); // e.g., "ball"
 }
 
 // Boolean property
-const isLiveResult = videotestsrc.getElementProperty('is-live');
-if (isLiveResult?.type === 'primitive') {
-  console.log('Is live:', isLiveResult.value); // true/false
+const isLiveResult = videotestsrc.getElementProperty("is-live");
+if (isLiveResult?.type === "primitive") {
+  console.log("Is live:", isLiveResult.value); // true/false
 }
 
 // Structure/Object property (like stats)
-const statsResult = rtpdepay.getElementProperty('stats');
-if (statsResult?.type === 'object') {
+const statsResult = rtpdepay.getElementProperty("stats");
+if (statsResult?.type === "object") {
   const stats = statsResult.value;
-  console.log('RTP timestamp:', stats.timestamp);
+  console.log("RTP timestamp:", stats.timestamp);
 }
 
 // Sample property
-const sampleResult = fakesink.getElementProperty('last-sample');
-if (sampleResult?.type === 'sample') {
+const sampleResult = fakesink.getElementProperty("last-sample");
+if (sampleResult?.type === "sample") {
   const sample = sampleResult.value;
-  console.log('Buffer size:', sample.buffer.length);
-  console.log('Caps:', sample.caps);
+  console.log("Buffer size:", sample.buffer.length);
+  console.log("Caps:", sample.caps);
 }
 ```
 
@@ -1037,12 +1039,12 @@ gst-kit/
 
 ## Platform Compatibility
 
-| Platform        | Local Development | Production Ready | Notes                           |
-| --------------- | ----------------- | ---------------- | ------------------------------- |
-| Ubuntu/Linux    | ✅ Full           | ✅ Full          | Excellent for servers           |
-| macOS           | ✅ Full           | ✅ Full          | Intel and Apple Silicon         |
-| Windows         | ✅ Full           | ✅ Full          | Requires environment setup     |
-| Docker          | ✅ Full           | ✅ Full          | Ubuntu-based containers         |
+| Platform     | Local Development | Production Ready | Notes                      |
+| ------------ | ----------------- | ---------------- | -------------------------- |
+| Ubuntu/Linux | ✅ Full           | ✅ Full          | Excellent for servers      |
+| macOS        | ✅ Full           | ✅ Full          | Intel and Apple Silicon    |
+| Windows      | ✅ Full           | ✅ Full          | Requires environment setup |
+| Docker       | ✅ Full           | ✅ Full          | Ubuntu-based containers    |
 
 ## License
 
