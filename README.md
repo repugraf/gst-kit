@@ -919,9 +919,8 @@ if (result === null) {
 
 ### Property Types
 
-- **`primitive`**: Strings, numbers, booleans, enums
-- **`bigint`**: BigInts (typically uint64s used to store nanoseconds)
-- **`array`**: Arrays of values
+- **`primitive`**: strings, numbers, booleans, bigint (typically uint64s used to store nanoseconds)
+- **`array`**: Arrays of primitive values (strings, numbers, booleans, bigints)
 - **`object`**: GStreamer structures (like stats)
 - **`buffer`**: Raw binary data
 - **`sample`**: Media samples with buffer, caps, and metadata

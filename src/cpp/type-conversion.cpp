@@ -329,10 +329,8 @@ namespace TypeConversion {
     Napi::Object result = Napi::Object::New(env);
 
     // Determine the type and set both type and value
-    if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean()) {
+    if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean() || js_value.IsBigInt()) {
       result.Set("type", Napi::String::New(env, "primitive"));
-    } else if (js_value.IsBigInt()) {
-      result.Set("type", Napi::String::New(env, "bigint"));
     } else if (js_value.IsArray()) {
       result.Set("type", Napi::String::New(env, "array"));
     } else if (js_value.IsBuffer()) {
