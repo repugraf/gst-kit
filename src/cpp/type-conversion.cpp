@@ -302,11 +302,11 @@ namespace TypeConversion {
         // Only cast to GValueArray if we're certain it's actually a GValueArray
         GValueArray *arr = static_cast<GValueArray *>(boxed_value);
         if (arr && arr->n_values > 0) { // sanity check with null check
-          Napi::Array jsArr = Napi::Array::New(env, arr->n_values);
+          Napi::Array js_arr = Napi::Array::New(env, arr->n_values);
           for (guint i = 0; i < arr->n_values; i++) {
-            jsArr.Set(i, gvalue_to_js(env, &arr->values[i]));
+            js_arr.Set(i, gvalue_to_js(env, &arr->values[i]));
           }
-          return jsArr;
+          return js_arr;
         }
       }
     }
