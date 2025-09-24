@@ -298,6 +298,13 @@ namespace TypeConversion {
         // Handle GstStructure (like stats property)
         const GstStructure *structure = GST_STRUCTURE(boxed_value);
         return gst_structure_to_js(env, structure);
+      } else if (boxed_value && strcmp(g_type_name(G_VALUE_TYPE(gvalue)), "GValueArray") == 0) {
+        GValueArray *arr = static_cast<GValueArray *>(boxed_value);
+        Napi::Array js_arr = Napi::Array::New(env, arr->n_values);
+        for (guint i = 0; i < arr->n_values; i++) {
+          js_arr.Set(i, gvalue_to_js(env, &arr->values[i]));
+        }
+        return js_arr;
       }
     }
 
@@ -319,10 +326,8 @@ namespace TypeConversion {
     Napi::Object result = Napi::Object::New(env);
 
     // Determine the type and set both type and value
-    if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean()) {
+    if (js_value.IsString() || js_value.IsNumber() || js_value.IsBoolean() || js_value.IsBigInt()) {
       result.Set("type", Napi::String::New(env, "primitive"));
-    } else if (js_value.IsBigInt()) {
-      result.Set("type", Napi::String::New(env, "bigint"));
     } else if (js_value.IsArray()) {
       result.Set("type", Napi::String::New(env, "array"));
     } else if (js_value.IsBuffer()) {

@@ -9,7 +9,10 @@ const __dirname = dirname(__filename);
 // Get the project root directory (two levels up from __dirname)
 const projectRoot = join(__dirname, "../../");
 
-export type GStreamerPropertyValue = string | number | boolean | bigint;
+export type GStreamerPropertyPrimitiveValue = string | number | boolean | bigint;
+export type GStreamerPropertyValue =
+  | GStreamerPropertyPrimitiveValue
+  | GStreamerPropertyPrimitiveValue[];
 
 // Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
 export type GStreamerSample = {
@@ -51,16 +54,14 @@ export type GstMessage = {
 // Extended return types including arrays, buffers, and samples
 export type GStreamerPropertyReturnValue =
   | GStreamerPropertyValue
-  | GStreamerPropertyValue[]
   | Record<string, GStreamerPropertyValue>
   | Buffer
   | GStreamerSample
   | null;
 
 export type GStreamerPropertyResult =
-  | { type: "primitive"; value: GStreamerPropertyValue }
-  | { type: "bigint"; value: GStreamerPropertyValue }
-  | { type: "array"; value: GStreamerPropertyValue[] }
+  | { type: "primitive"; value: GStreamerPropertyPrimitiveValue }
+  | { type: "array"; value: GStreamerPropertyPrimitiveValue[] }
   | { type: "object"; value: Record<string, GStreamerPropertyValue> }
   | { type: "buffer"; value: Buffer }
   | { type: "sample"; value: GStreamerSample }

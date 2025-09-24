@@ -134,4 +134,23 @@ describe.concurrent("Pipeline busPop Method", () => {
       expect(typeof messageWithStructure.structureName).toBe("string");
     }
   });
+
+  it("should receive message with array property type", async () => {
+    const pipeline = new Pipeline(
+      `audiotestsrc wave=ticks tick-interval=400000000 num-buffers=50 ` +
+        `! level name=lev ! fakeaudiosink`
+    );
+
+    await pipeline.play();
+
+    let message: Awaited<ReturnType<typeof pipeline.busPop>> = null;
+
+    do {
+      message = await pipeline.busPop();
+    } while (message?.type !== "element" || message?.srcElementName !== "lev");
+
+    await pipeline.stop();
+
+    expect(message?.peak).toBeInstanceOf(Array);
+  });
 });

@@ -76,19 +76,19 @@ describe.concurrent("Element Properties", () => {
     // Test setting num-buffers property with bigint
     queue.setElementProperty("max-size-time", 1000000000n);
     const maxSizeTime = queue.getElementProperty("max-size-time");
-    expect(maxSizeTime?.type).toBe("bigint");
+    expect(maxSizeTime?.type).toBe("primitive");
     expect(maxSizeTime?.value).toBe(1000000000n);
 
     // Test setting num-buffers property with number
     queue.setElementProperty("max-size-time", 1000);
     const maxSizeTime2 = queue.getElementProperty("max-size-time");
-    expect(maxSizeTime2?.type).toBe("bigint");
+    expect(maxSizeTime2?.type).toBe("primitive");
     expect(maxSizeTime2?.value).toBe(1000n);
 
     // Test setting numbers larger then uint32 within javaScript number (which is a float64)
     queue.setElementProperty("max-size-time", Number.MAX_SAFE_INTEGER);
     const maxSizeTime3 = queue.getElementProperty("max-size-time");
-    expect(maxSizeTime3?.type).toBe("bigint");
+    expect(maxSizeTime3?.type).toBe("primitive");
     expect(maxSizeTime3?.value).toBe(BigInt(Number.MAX_SAFE_INTEGER));
   });
 
