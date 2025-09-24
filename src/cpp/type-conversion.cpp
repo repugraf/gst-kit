@@ -301,7 +301,7 @@ namespace TypeConversion {
       } else if (boxed_value && strcmp(g_type_name(G_VALUE_TYPE(gvalue)), "GValueArray") == 0) {
         // Only cast to GValueArray if we're certain it's actually a GValueArray
         GValueArray *arr = static_cast<GValueArray *>(boxed_value);
-        if (arr && arr->n_values > 0) { // sanity check with null check
+        if (arr) { // sanity check with null check
           Napi::Array js_arr = Napi::Array::New(env, arr->n_values);
           for (guint i = 0; i < arr->n_values; i++) {
             js_arr.Set(i, gvalue_to_js(env, &arr->values[i]));
