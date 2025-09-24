@@ -298,7 +298,7 @@ namespace TypeConversion {
         // Handle GstStructure (like stats property)
         const GstStructure *structure = GST_STRUCTURE(boxed_value);
         return gst_structure_to_js(env, structure);
-      } else if (boxed_value && std::string(g_type_name(G_VALUE_TYPE(gvalue))) == "GValueArray") {
+      } else if (boxed_value && strcmp(g_type_name(G_VALUE_TYPE(gvalue)), "GValueArray") == 0) {
         // Only cast to GValueArray if we're certain it's actually a GValueArray
         GValueArray *arr = static_cast<GValueArray *>(boxed_value);
         if (arr && arr->n_values > 0) { // sanity check with null check
