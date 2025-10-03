@@ -111,7 +111,7 @@ export type BufferData = {
   rtp?: RTPData;
 };
 
-type ElementBase = {
+export type ElementBase = {
   getElementProperty: (key: string) => GStreamerPropertyResult;
   setElementProperty: (key: string, value: GStreamerPropertyValue) => void;
   addPadProbe: (padName: string, callback: (bufferData: BufferData) => void) => () => void;
@@ -123,13 +123,13 @@ type Element = {
   readonly type: "element";
 } & ElementBase;
 
-type AppSinkElement = {
+export type AppSinkElement = {
   readonly type: "app-sink-element";
   getSample(timeoutMs?: number): Promise<GStreamerSample | null>;
   onSample(callback: (sample: GStreamerSample) => void): () => void;
 } & ElementBase;
 
-type AppSrcElement = {
+export type AppSrcElement = {
   readonly type: "app-src-element";
   push(buffer: Buffer, pts?: Buffer | number): void;
   endOfStream(): void;
