@@ -43,7 +43,7 @@ git checkout -b feature/your-feature-name
 
 ## Building
 
-The project uses cmake-js for building the native GStreamer addon and TypeScript compilation:
+The project uses node-gyp for building the native GStreamer addon and TypeScript compilation:
 
 ```bash
 npm run build
@@ -75,7 +75,7 @@ This will:
 ### For C++ native changes
 
 - Edit files in `src/cpp/`
-- Update CMakeLists.txt if adding new files
+- Update binding.gyp if adding new files
 - Build with `npm run build:native`
 - Test with full `npm test`
 
