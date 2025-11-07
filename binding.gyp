@@ -8,7 +8,7 @@
                 "src/cpp/async-workers.cpp",
                 "src/cpp/element.cpp",
                 "src/cpp/type-conversion.cpp",
-                "src/cpp/pipeline.cpp",
+                "src/cpp/pipeline.cpp"
             ],
             "dependencies": ["<!(node -p \"require('node-addon-api').gyp\")"],
             "defines": [
