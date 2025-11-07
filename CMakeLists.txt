@@ -102,13 +102,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Set compiler flags for non-Windows platforms first
-if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-endif()
-
 # Set output directories
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
@@ -143,7 +136,7 @@ target_link_libraries(gst_kit_addon
     ${GOBJECT_LIBRARIES}
 )
 
-# Windows-specific compiler and linker settings
+# Platform-specific compiler settings
 if(WIN32)
     # Enable C++ exception handling
     target_compile_options(gst_kit_addon PRIVATE /EHsc)
@@ -155,10 +148,12 @@ if(WIN32)
     set_property(TARGET gst_kit_addon PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     
-    # Enable linker checksum
-    target_link_options(gst_kit_addon PRIVATE /RELEASE)
-    
     message(STATUS "Windows build detected - applied MSVC-specific flags")
+else()
+    # Unix-like platforms (Linux, macOS)
+    target_compile_options(gst_kit_addon PRIVATE -fPIC)
+    target_compile_options(gst_kit_addon PRIVATE $<$<CONFIG:Debug>:-g>)
+    target_compile_options(gst_kit_addon PRIVATE $<$<CONFIG:Release>:-O3>)
 endif()
 
 # Add compile definitions for Node.js addon
