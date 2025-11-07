@@ -97,6 +97,18 @@ else()
     )
 endif()
 
+# Set build type
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# Set compiler flags for non-Windows platforms first
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+endif()
+
 # Set output directories
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release")
@@ -131,30 +143,27 @@ target_link_libraries(gst_kit_addon
     ${GOBJECT_LIBRARIES}
 )
 
-# Windows-specific compiler flag fixes
+# Windows-specific compiler and linker settings
 if(WIN32)
-    # Remove Unix-specific flags that cause warnings on Windows
-    string(REPLACE "-fPIC" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "-O3" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    # Enable C++ exception handling
+    target_compile_options(gst_kit_addon PRIVATE /EHsc)
     
-    # Add Windows-specific optimizations
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+    # Set optimization level for Release builds
+    target_compile_options(gst_kit_addon PRIVATE $<$<CONFIG:Release>:/O2>)
     
-    message(STATUS "Windows build detected - adjusted compiler flags")
+    # Set runtime library to MultiThreaded DLL
+    set_property(TARGET gst_kit_addon PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    
+    # Enable linker checksum
+    target_link_options(gst_kit_addon PRIVATE /RELEASE)
+    
+    message(STATUS "Windows build detected - applied MSVC-specific flags")
 endif()
-
-# Set build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-
-# Set compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 # Add compile definitions for Node.js addon
 target_compile_definitions(gst_kit_addon PRIVATE
     NAPI_CPP_EXCEPTIONS
     BUILDING_NODE_EXTENSION
+    NAPI_VERSION=8
 )
