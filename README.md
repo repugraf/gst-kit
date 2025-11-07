@@ -16,7 +16,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 
 - **Rollup bundling**: Generates both CommonJS and ESM modules for maximum compatibility
 - **TypeScript-first**: Complete TypeScript support with full type definitions
-- **CMake build system**: Robust C++ compilation with proper dependency management
+- **GYP build system**: Robust C++ compilation with proper dependency management
 - **Modern testing**: Uses Vitest for fast, concurrent testing instead of legacy test frameworks
 
 ### Enhanced Developer Experience
@@ -67,7 +67,7 @@ npm install gst-kit
 
 - **Runtime**: Node.js 16+ or Bun 1.0+ (Deno is not supported)
 - **System**: GStreamer 1.14 or higher (1.26+ recommended)
-- **Build Tools**: CMake 3.10 or higher, pkg-config
+- **Build Tools**: Python 2.7 or 3.x (for node-gyp), pkg-config
 - **Dependencies**: GStreamer development packages and plugins
 
 ### Platform-Specific Installation Guide
@@ -76,10 +76,10 @@ npm install gst-kit
 
 ```bash
 # Install development tools across platforms (Windows, macOS, Linux)
-npx setup-cpp --compiler auto --cmake true --pkg-config true
+npx setup-cpp --compiler auto --pkg-config true
 
 # On Windows, this can also install Chocolatey:
-npx setup-cpp --compiler msvc --cmake true --pkg-config true --choco true
+npx setup-cpp --compiler msvc --pkg-config true --choco true
 ```
 
 #### Ubuntu/Debian (Recommended for Production)
@@ -106,14 +106,14 @@ sudo apt-get install -y \
   gstreamer1.0-libav
 
 # Install build tools
-sudo apt-get install -y cmake build-essential
+sudo apt-get install -y build-essential python3
 ```
 
 ##### Option B: Cross-Platform Setup with setup-cpp (Ubuntu)
 
 ```bash
 # Install build tools automatically
-npx setup-cpp --compiler auto --cmake true --pkg-config true
+npx setup-cpp --compiler auto --pkg-config true
 
 # Then install GStreamer packages
 sudo apt-get update
@@ -143,9 +143,6 @@ gst-launch-1.0 --version
 # Install GStreamer and plugins
 brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
 
-# Install build tools
-brew install cmake
-
 # Set environment variables (add to ~/.zshrc or ~/.bash_profile)
 export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH"
 export LIBRARY_PATH="$(brew --prefix)/lib:$LIBRARY_PATH"
@@ -156,7 +153,7 @@ export LD_LIBRARY_PATH="$(brew --prefix)/lib:$LD_LIBRARY_PATH"
 
 ```bash
 # Install build tools automatically
-npx setup-cpp --compiler auto --cmake true --pkg-config true
+npx setup-cpp --compiler auto --pkg-config true
 
 # Then install GStreamer via Homebrew
 brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
@@ -178,17 +175,13 @@ gst-launch-1.0 --version
 
 **Complete Installation:**
 
-1. **Install Build Tools and CMake:**
+1. **Install Build Tools:**
 
    ##### Option A: Manual Installation
 
    ```powershell
    # Install Visual Studio Build Tools 2019/2022 (Community edition is free)
    # Download from: https://visualstudio.microsoft.com/downloads/
-
-   # Install CMake
-   # Download from: https://cmake.org/download/
-   # Or via chocolatey: choco install cmake
 
    # Install pkg-config (REQUIRED for build to work)
    choco install pkgconfiglite
@@ -199,7 +192,7 @@ gst-launch-1.0 --version
    ```powershell
    # Use setup-cpp for automated toolchain installation (works on Windows, macOS, Linux)
    # This tool can install compilers, package managers (including Chocolatey), and build systems
-   npx setup-cpp --compiler msvc --cmake true --pkg-config true --choco true
+   npx setup-cpp --compiler msvc --pkg-config true --choco true
    ```
 
 2. **Install GStreamer 1.26.2:**
@@ -234,9 +227,6 @@ gst-launch-1.0 --version
 # Verify pkg-config can find GStreamer (most important for building)
 pkg-config --exists gstreamer-1.0; if ($LASTEXITCODE -eq 0) { Write-Host "GStreamer found" } else { Write-Host "GStreamer NOT found" }
 pkg-config --cflags --libs gstreamer-1.0
-
-# Verify CMake installation
-cmake --version
 ```
 
 **Windows-Specific Troubleshooting:**
@@ -347,7 +337,7 @@ RUN apt-get update && apt-get install -y \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
-    cmake build-essential pkg-config \
+    build-essential pkg-config python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install your application
@@ -962,10 +952,10 @@ if (sampleResult?.type === "sample") {
 
 ### Native Code (C++)
 
-- **CMake**: Modern build system with proper dependency detection
+- **GYP**: Cross-platform build configuration system
 - **N-API**: Node-API for runtime-independent native bindings
 - **GStreamer Integration**: Full integration with GStreamer 1.0 ecosystem
-- **Compiler Support**: GCC, Clang with C++17 standard
+- **Compiler Support**: GCC, Clang, MSVC with C++20 standard
 
 ### TypeScript/JavaScript
 
@@ -1008,13 +998,13 @@ gst-kit/
 │   ├── set-pad.mjs           # Pad manipulation
 │   ├── fakesink.mjs          # Fakesink usage
 │   └── glshader.mjs          # OpenGL shader example
-├── build/                     # CMake build output
+├── build/                     # GYP build output
 ├── dist/                      # Rollup build output
 │   ├── esm/                  # ES modules
 │   ├── cjs/                  # CommonJS modules
 │   └── index.d.ts            # Type definitions
 ├── scripts/                   # Build and utility scripts
-├── CMakeLists.txt            # CMake configuration
+├── binding.gyp               # GYP build configuration
 ├── rollup.config.mjs         # Rollup bundler configuration
 ├── vitest.config.ts          # Vitest test configuration
 ├── tsconfig.json             # TypeScript configuration

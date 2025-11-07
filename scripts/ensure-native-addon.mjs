@@ -33,7 +33,7 @@ if (!existsSync(addonPath)) {
     console.error("Failed to build native addon:", error.message);
     console.error("Make sure you have the required system dependencies:");
     console.error("- GStreamer development libraries");
-    console.error("- CMake");
+    console.error("- Python 2.7 or 3.x (for node-gyp)");
     console.error("- A C++ compiler");
     process.exit(1);
   }

@@ -22,11 +22,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
-    - name: Install CMake
-      uses: jwlawson/actions-setup-cmake@v1.14
-      with:
-        cmake-version: 'latest'
 
     - name: Install GStreamer dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'

@@ -12,13 +12,15 @@ dist/
 *.so
 *.dylib
 
-# CMake
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
+# GYP and build artifacts
 Makefile
-*.cmake
-!CMakeLists.txt
+*.mk
+*.target.mk
+*.Makefile
+*.xcodeproj
+*.vcxproj
+*.vcxproj.filters
+*.sln
 
 # OS
 .DS_Store
