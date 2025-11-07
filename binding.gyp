@@ -44,15 +44,7 @@
                 "<!@(node -p \"require('child_process').execSync('pkg-config --cflags-only-I gobject-2.0').toString().trim().split(/\\s+/).map(f => f.replace(/^-I/, '')).join(' ')\")",
             ],
             "libraries": [
-                # For non-Windows platforms, use pkg-config output directly
-                "<!(node -p \"require('child_process').execSync('pkg-config --libs-only-l gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtp-1.0 glib-2.0 gobject-2.0').toString().trim()\")"
-            ],
-            "conditions": [
-                [ "OS=='win'", {
-                    "libraries": [
-                        "<!(node -p \"require('child_process').execSync('pkg-config --libs-only-l gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtp-1.0 glib-2.0 gobject-2.0').toString().trim().split(/\\s+/).map(f => f.replace(/^-l/, '') + '.lib').filter(f => f !== '.lib').join(' ')\")"
-                    ]
-                }]
+                "<!@(node -p \"require('child_process').execSync('pkg-config --libs-only-l gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtp-1.0 glib-2.0 gobject-2.0').toString().trim().split(/\\s+/).map(f => f.replace(/^-l/, '') + '.lib').filter(f => f !== '.lib').join(' ')\")"
             ],
         }
     ]
