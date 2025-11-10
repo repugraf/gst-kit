@@ -14,13 +14,8 @@
       "cStandard": "${default}",
       "cppStandard": "${default}",
       "intelliSenseMode": "linux-gcc-x64",
-      "compilerArgs": [
-        ""
-      ],
-      "defines": [
-        "NAPI_CPP_EXCEPTIONS",
-        "BUILDING_NODE_EXTENSION"
-      ]
+      "compilerArgs": [""],
+      "defines": ["NAPI_CPP_EXCEPTIONS", "BUILDING_NODE_EXTENSION"]
     }
   ],
   "version": 4
