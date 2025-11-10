@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Pipeline } from "./index.js";
+import { Pipeline } from ".";
 
 describe("Pipeline.elementExists", () => {
   it("should return true for built-in elements that exist", () => {
