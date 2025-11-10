@@ -8,7 +8,7 @@
 
 class Pipeline : public Napi::ObjectWrap<Pipeline> {
 public:
-  static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  static Napi::Object Init(const Napi::Env &env, const Napi::Object &exports);
   static Napi::Value ElementExists(const Napi::CallbackInfo &info);
 
   Pipeline(const Napi::CallbackInfo &info);
