@@ -7,7 +7,7 @@
 
 // Forward declarations
 namespace TypeConversion {
-  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample);
+  Napi::Object gst_sample_to_js(const Napi::Env &env, GstSample *sample);
 }
 
 // AsyncWorker for bus message popping with timeout
@@ -24,7 +24,7 @@ public:
 
 private:
   void cleanup();
-  Napi::Object ConvertMessageToJs(Napi::Env env, GstMessage *msg);
+  Napi::Object ConvertMessageToJs(const Napi::Env &env, GstMessage *msg);
 
   GstPipeline *pipeline;
   GstClockTime timeout;

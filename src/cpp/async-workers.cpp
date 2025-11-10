@@ -54,7 +54,7 @@ void BusPopWorker::cleanup() {
   }
 }
 
-Napi::Object BusPopWorker::ConvertMessageToJs(Napi::Env env, GstMessage *msg) {
+Napi::Object BusPopWorker::ConvertMessageToJs(const Napi::Env &env, GstMessage *msg) {
   Napi::Object result = Napi::Object::New(env);
 
   // Add message type
