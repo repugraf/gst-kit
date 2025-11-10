@@ -363,6 +363,26 @@ setTimeout(async () => {
 }, 5000);
 ```
 
+### Checking Element Availability
+
+```javascript
+import { Pipeline } from "gst-kit";
+
+// Check if specific GStreamer elements are available before using them
+if (Pipeline.elementExists("x264enc")) {
+  console.log("H.264 encoder is available");
+  const pipeline = new Pipeline("videotestsrc ! x264enc ! mp4mux ! filesink location=output.mp4");
+} else {
+  console.log("x264enc not found, using alternative encoder");
+  const pipeline = new Pipeline("videotestsrc ! vp8enc ! webmmux ! filesink location=output.webm");
+}
+
+// Check hardware acceleration support
+const hasVaapi = Pipeline.elementExists("vaapih264enc");
+const hasNvenc = Pipeline.elementExists("nvh264enc");
+console.log(`VAAPI support: ${hasVaapi}, NVENC support: ${hasNvenc}`);
+```
+
 ### Working with AppSink (Pull-based Approach)
 
 ```javascript
@@ -819,6 +839,9 @@ console.log("Pad info:", srcPad?.name, srcPad?.direction, srcPad?.caps);
 ```typescript
 class Pipeline {
   constructor(description: string);
+
+  // Static methods
+  static elementExists(elementName: string): boolean;
 
   // State management
   play(timeoutMs?: number): Promise<StateChangeResult>;

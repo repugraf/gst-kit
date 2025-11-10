@@ -4,15 +4,27 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+bool Pipeline::gst_initialized = false;
+
+void Pipeline::ensure_gst_initialized() {
+  if (!gst_initialized) {
+    gst_init(NULL, NULL);
+    gst_initialized = true;
+  }
+}
+
 Napi::Object Pipeline::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(env, "Pipeline", {});
+
+  func.Set("elementExists", Napi::Function::New(env, Pipeline::ElementExists, "elementExists"));
+
   exports.Set("Pipeline", func);
   return exports;
 }
 
 Pipeline::Pipeline(const Napi::CallbackInfo &info) :
     Napi::ObjectWrap<Pipeline>(info), pipeline(nullptr, gst_object_unref) {
-  gst_init(NULL, NULL);
+  ensure_gst_initialized();
   Napi::Env env = info.Env();
   GError *err = NULL;
 
@@ -258,4 +270,27 @@ Napi::Value Pipeline::seek(const Napi::CallbackInfo &info) {
   );
 
   return Napi::Boolean::New(env, result);
+}
+
+Napi::Value Pipeline::ElementExists(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1 || !info[0].IsString()) {
+    Napi::TypeError::New(env, "elementExists() requires a string argument (element name)")
+      .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  ensure_gst_initialized();
+
+  std::string name = info[0].As<Napi::String>().Utf8Value();
+
+  GstElementFactory *factory = gst_element_factory_find(name.c_str());
+  bool exists = (factory != nullptr);
+
+  if (factory) {
+    gst_object_unref(factory);
+  }
+
+  return Napi::Boolean::New(env, exists);
 }

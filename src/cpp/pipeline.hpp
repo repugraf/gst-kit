@@ -9,6 +9,7 @@
 class Pipeline : public Napi::ObjectWrap<Pipeline> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  static Napi::Value ElementExists(const Napi::CallbackInfo &info);
 
   Pipeline(const Napi::CallbackInfo &info);
 
@@ -25,4 +26,6 @@ public:
 private:
   std::string pipeline_string;
   std::unique_ptr<GstPipeline, decltype(&gst_object_unref)> pipeline;
+  static bool gst_initialized;
+  static void ensure_gst_initialized();
 };

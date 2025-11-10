@@ -1,9 +1,9 @@
 #pragma once
 
-#include <gst/gst.h>
 #include <gst/app/gstappsink.h>
-#include <napi.h>
+#include <gst/gst.h>
 #include <memory>
+#include <napi.h>
 
 // Forward declarations
 namespace TypeConversion {
@@ -19,7 +19,7 @@ public:
   void Execute() override;
   void OnOK() override;
   void OnError(const Napi::Error &error) override;
-  
+
   Napi::Promise::Deferred GetPromise();
 
 private:
@@ -41,7 +41,7 @@ public:
   void Execute() override;
   void OnOK() override;
   void OnError(const Napi::Error &error) override;
-  
+
   Napi::Promise::Deferred GetPromise();
 
 private:
@@ -56,13 +56,15 @@ private:
 // AsyncWorker for pipeline state changes with timeout
 class StateChangeWorker : public Napi::AsyncWorker {
 public:
-  StateChangeWorker(Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout);
+  StateChangeWorker(
+    Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
+  );
   ~StateChangeWorker();
 
   void Execute() override;
   void OnOK() override;
   void OnError(const Napi::Error &error) override;
-  
+
   Napi::Promise::Deferred GetPromise();
 
 private:
@@ -74,4 +76,4 @@ private:
   GstStateChangeReturn state_change_result;
   GstState final_state;
   Napi::Promise::Deferred deferred;
-}; 
+};
