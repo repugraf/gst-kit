@@ -14,7 +14,7 @@ namespace TypeConversion {
    * @return true if conversion was successful, false otherwise
    */
   bool js_to_gvalue(
-    Napi::Env env, const Napi::Value &js_value, GType target_type, GValue *out_value
+    const Napi::Env &env, const Napi::Value &js_value, GType target_type, GValue *out_value
   );
 
   /**
@@ -23,7 +23,7 @@ namespace TypeConversion {
    * @param gvalue The GValue to convert
    * @return The converted JavaScript value (throws on conversion failure)
    */
-  Napi::Value gvalue_to_js(Napi::Env env, const GValue *gvalue);
+  Napi::Value gvalue_to_js(const Napi::Env &env, const GValue *gvalue);
 
   /**
    * Convert a GValue to a standardized JavaScript object with type and value fields
@@ -31,7 +31,7 @@ namespace TypeConversion {
    * @param gvalue The GValue to convert
    * @return Object with 'type' and 'value' fields, or null if the value is null
    */
-  Napi::Value gvalue_to_js_with_type(Napi::Env env, const GValue *gvalue);
+  Napi::Value gvalue_to_js_with_type(const Napi::Env &env, const GValue *gvalue);
 
   /**
    * Get a human-readable error message for type conversion failures
@@ -47,7 +47,7 @@ namespace TypeConversion {
    * @param sample The GstSample to convert
    * @return JavaScript object with sample data
    */
-  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample);
+  Napi::Object gst_sample_to_js(const Napi::Env &env, GstSample *sample);
 
   /**
    * Convert a GstStructure to a JavaScript object
@@ -55,5 +55,5 @@ namespace TypeConversion {
    * @param structure The GstStructure to convert
    * @return JavaScript object with structure data
    */
-  Napi::Object gst_structure_to_js(Napi::Env env, const GstStructure *structure);
+  Napi::Object gst_structure_to_js(const Napi::Env &env, const GstStructure *structure);
 }

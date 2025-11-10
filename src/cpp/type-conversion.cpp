@@ -3,7 +3,7 @@
 
 namespace TypeConversion {
   bool js_to_gvalue(
-    Napi::Env env, const Napi::Value &js_value, GType target_type, GValue *out_value
+    const Napi::Env &env, const Napi::Value &js_value, GType target_type, GValue *out_value
   ) {
     g_value_init(out_value, target_type);
 
@@ -181,7 +181,7 @@ namespace TypeConversion {
     }
   };
 
-  Napi::Value gvalue_to_js(Napi::Env env, const GValue *gvalue) {
+  Napi::Value gvalue_to_js(const Napi::Env &env, const GValue *gvalue) {
     auto g_value_type = G_VALUE_TYPE(gvalue);
     if (g_value_type == G_TYPE_STRING) {
       return Napi::String::New(env, g_value_get_string(gvalue));
@@ -315,7 +315,7 @@ namespace TypeConversion {
     return env.Undefined();
   };
 
-  Napi::Value gvalue_to_js_with_type(Napi::Env env, const GValue *gvalue) {
+  Napi::Value gvalue_to_js_with_type(const Napi::Env &env, const GValue *gvalue) {
     Napi::Value js_value = gvalue_to_js(env, gvalue);
 
     if (js_value.IsNull()) {
@@ -389,7 +389,7 @@ namespace TypeConversion {
     }
   }
 
-  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample) {
+  Napi::Object gst_sample_to_js(const Napi::Env &env, GstSample *sample) {
     if (!sample) {
       Napi::TypeError::New(env, "Sample is null").ThrowAsJavaScriptException();
       return Napi::Object::New(env);
@@ -450,7 +450,7 @@ namespace TypeConversion {
     return result;
   }
 
-  Napi::Object gst_structure_to_js(Napi::Env env, const GstStructure *structure) {
+  Napi::Object gst_structure_to_js(const Napi::Env &env, const GstStructure *structure) {
     if (!structure) {
       return Napi::Object::New(env);
     }

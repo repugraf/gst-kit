@@ -7,13 +7,13 @@
 
 // Forward declarations
 namespace TypeConversion {
-  Napi::Object gst_sample_to_js(Napi::Env env, GstSample *sample);
+  Napi::Object gst_sample_to_js(const Napi::Env &env, GstSample *sample);
 }
 
 // AsyncWorker for bus message popping with timeout
 class BusPopWorker : public Napi::AsyncWorker {
 public:
-  BusPopWorker(Napi::Env env, GstPipeline *pipeline, GstClockTime timeout);
+  BusPopWorker(const Napi::Env &env, GstPipeline *pipeline, GstClockTime timeout);
   ~BusPopWorker();
 
   void Execute() override;
@@ -24,7 +24,7 @@ public:
 
 private:
   void cleanup();
-  Napi::Object ConvertMessageToJs(Napi::Env env, GstMessage *msg);
+  Napi::Object ConvertMessageToJs(const Napi::Env &env, GstMessage *msg);
 
   GstPipeline *pipeline;
   GstClockTime timeout;
@@ -35,7 +35,7 @@ private:
 // AsyncWorker for pulling samples with timeout
 class PullSampleWorker : public Napi::AsyncWorker {
 public:
-  PullSampleWorker(Napi::Env env, GstAppSink *app_sink, guint64 timeout_ms);
+  PullSampleWorker(const Napi::Env &env, GstAppSink *app_sink, guint64 timeout_ms);
   ~PullSampleWorker();
 
   void Execute() override;
@@ -57,7 +57,7 @@ private:
 class StateChangeWorker : public Napi::AsyncWorker {
 public:
   StateChangeWorker(
-    Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
+    const Napi::Env &env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
   );
   ~StateChangeWorker();
 

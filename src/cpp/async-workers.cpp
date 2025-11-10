@@ -3,7 +3,7 @@
 #include <gst/gst.h>
 
 // BusPopWorker implementation
-BusPopWorker::BusPopWorker(Napi::Env env, GstPipeline *pipeline, GstClockTime timeout) :
+BusPopWorker::BusPopWorker(const Napi::Env &env, GstPipeline *pipeline, GstClockTime timeout) :
     Napi::AsyncWorker(env), pipeline(pipeline), timeout(timeout), message(nullptr), deferred(env) {
   // Increase reference count since we'll be using this in another thread
   gst_object_ref(pipeline);
@@ -54,7 +54,7 @@ void BusPopWorker::cleanup() {
   }
 }
 
-Napi::Object BusPopWorker::ConvertMessageToJs(Napi::Env env, GstMessage *msg) {
+Napi::Object BusPopWorker::ConvertMessageToJs(const Napi::Env &env, GstMessage *msg) {
   Napi::Object result = Napi::Object::New(env);
 
   // Add message type
@@ -142,7 +142,7 @@ Napi::Object BusPopWorker::ConvertMessageToJs(Napi::Env env, GstMessage *msg) {
 }
 
 // PullSampleWorker implementation
-PullSampleWorker::PullSampleWorker(Napi::Env env, GstAppSink *app_sink, guint64 timeout_ms) :
+PullSampleWorker::PullSampleWorker(const Napi::Env &env, GstAppSink *app_sink, guint64 timeout_ms) :
     Napi::AsyncWorker(env), app_sink(app_sink), timeout_ms(timeout_ms), sample(nullptr),
     deferred(env) {
   // Increase reference count since we'll be using this in another thread
@@ -194,7 +194,7 @@ void PullSampleWorker::cleanup() {
 
 // StateChangeWorker implementation
 StateChangeWorker::StateChangeWorker(
-  Napi::Env env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
+  const Napi::Env &env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
 ) :
     Napi::AsyncWorker(env), pipeline(pipeline), target_state(target_state), timeout(timeout),
     state_change_result(GST_STATE_CHANGE_FAILURE), final_state(GST_STATE_VOID_PENDING),

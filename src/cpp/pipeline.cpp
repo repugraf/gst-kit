@@ -13,7 +13,7 @@ void Pipeline::ensure_gst_initialized() {
   }
 }
 
-Napi::Object Pipeline::Init(Napi::Env env, Napi::Object exports) {
+Napi::Object Pipeline::Init(const Napi::Env &env, const Napi::Object &exports) {
   Napi::Function func = DefineClass(env, "Pipeline", {});
 
   func.Set("elementExists", Napi::Function::New(env, Pipeline::ElementExists, "elementExists"));

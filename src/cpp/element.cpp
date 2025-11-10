@@ -8,7 +8,7 @@
 #include <string>
 #include <thread>
 
-Napi::Object Element::CreateFromGstElement(Napi::Env env, GstElement *element) {
+Napi::Object Element::CreateFromGstElement(const Napi::Env &env, GstElement *element) {
   Napi::Function func = DefineClass(env, "Element", {});
   return func.New({Napi::External<GstElement>::New(env, element)});
 }
