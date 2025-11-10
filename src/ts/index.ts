@@ -147,9 +147,14 @@ interface Pipeline {
   seek(positionSeconds: number): boolean;
 }
 
+interface PipelineConstructor {
+  new (pipeline: string): Pipeline;
+  elementExists(elementName: string): boolean;
+}
+
 // Define the interface for the native addon
 interface NativeAddon {
-  Pipeline: new (pipeline: string) => Pipeline;
+  Pipeline: PipelineConstructor;
   GStreamerPropertyValue: GStreamerPropertyValue;
   GStreamerSample: GStreamerSample;
   GStreamerPropertyReturnValue: GStreamerPropertyReturnValue;
