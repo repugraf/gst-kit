@@ -11,7 +11,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf build dist",
+    "clean": "node scripts/clean.mjs",
     "build:native": "node-gyp rebuild",
     "build:ts": "rollup -c rollup.config.mjs",
     "build": "npm run clean && npm run build:native && npm run build:ts",
