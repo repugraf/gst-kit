@@ -52,13 +52,16 @@
     "node-gyp": "12.2.0"
   },
   "devDependencies": {
-    "@types/node": "25.5.0",
-    "@typescript-eslint/eslint-plugin": "8.57.0",
-    "@typescript-eslint/parser": "8.57.0",
+    "@eslint/eslintrc": "3.3.5",
+    "@eslint/js": "10.0.1",
     "@rollup/plugin-commonjs": "29.0.2",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-typescript": "12.3.0",
+    "@types/node": "25.5.0",
+    "@typescript-eslint/eslint-plugin": "8.57.0",
+    "@typescript-eslint/parser": "8.57.0",
     "eslint": "10.0.3",
+    "globals": "17.4.0",
     "prettier": "3.8.1",
     "rollup": "4.59.0",
     "rollup-plugin-dts": "6.4.0",
@@ -76,8 +79,6 @@
     "eslint": {
       "js-yaml": "4.1.1"
     },
-    "minimatch": "10.2.4",
-    "tar": "7.5.11",
-    "ajv": "8.18.0"
+    "tar": "7.5.11"
   }
 }
