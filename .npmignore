@@ -7,11 +7,11 @@ build/
 
 # TypeScript configuration files (source files are shipped for debugging)
 tsconfig.json
-rollup.config.mjs
+rolldown.config.mjs
 
 # Configuration files
 .gitignore
-.eslintrc.json
+.oxlintrc.json
 .prettierrc
 vitest.config.ts
 
@@ -53,9 +53,6 @@ pids/
 
 # Optional npm cache directory
 .npm
-
-# Optional eslint cache
-.eslintcache
 
 # IDE files
 .idea/
