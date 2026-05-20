@@ -82,11 +82,12 @@ Napi::Object BusPopWorker::ConvertMessageToJs(const Napi::Env &env, GstMessage *
         Napi::Object *obj = data->second;
 
         const char *field_name = g_quark_to_string(field_id);
-        try {
-          Napi::Value js_value = TypeConversion::gvalue_to_js(env, value);
-          obj->Set(field_name, js_value);
-        } catch (...) {
+        Napi::Value js_value = TypeConversion::gvalue_to_js(env, value);
+        if (env.IsExceptionPending()) {
           // Skip fields that can't be converted
+          env.GetAndClearPendingException();
+        } else {
+          obj->Set(field_name, js_value);
         }
 
         return TRUE;
