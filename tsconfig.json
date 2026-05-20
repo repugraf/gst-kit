@@ -7,9 +7,8 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist",
-    "declaration": true,
-    "sourceMap": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["src/ts/**/*"],
   "exclude": ["node_modules", "dist", "build"]
