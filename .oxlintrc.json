@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "rules": {
+    "typescript/no-explicit-any": "off",
+    "typescript/explicit-function-return-type": "off"
+  },
+  "ignorePatterns": [
+    "**/*.d.ts",
+    "dist/**/*",
+    "build/**/*",
+    "node_modules/**/*",
+    "vendor/**/*",
+    "scripts/**/*",
+    "modules/**/*",
+    "**/*.test.ts"
+  ]
+}

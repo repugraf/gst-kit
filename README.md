@@ -14,7 +14,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 
 ### Modern Build System
 
-- **Rollup bundling**: Generates both CommonJS and ESM modules for maximum compatibility
+- **Rolldown bundling**: Generates both CommonJS and ESM modules for maximum compatibility
 - **TypeScript-first**: Complete TypeScript support with full type definitions
 - **GYP build system**: Robust C++ compilation with proper dependency management
 - **Modern testing**: Uses Vitest for fast, concurrent testing instead of legacy test frameworks
@@ -982,7 +982,7 @@ if (sampleResult?.type === "sample") {
 
 ### TypeScript/JavaScript
 
-- **Rollup**: Module bundler generating both ESM and CJS outputs
+- **Rolldown**: Rust-based module bundler generating both ESM and CJS outputs
 - **TypeScript**: Full type definitions and compilation
 - **Dual Packaging**: Supports both `import` and `require` statements
 - **Source Maps**: Full debugging support
@@ -990,7 +990,7 @@ if (sampleResult?.type === "sample") {
 ### Testing & Quality
 
 - **Vitest**: Modern, fast test runner with concurrent execution
-- **ESLint**: Code linting with TypeScript support
+- **Oxlint**: Fast Rust-based linter with TypeScript support
 - **Prettier**: Code formatting
 - **Coverage**: Built-in test coverage reporting
 
@@ -1022,13 +1022,13 @@ gst-kit/
 │   ├── fakesink.mjs          # Fakesink usage
 │   └── glshader.mjs          # OpenGL shader example
 ├── build/                     # GYP build output
-├── dist/                      # Rollup build output
+├── dist/                      # Rolldown build output
 │   ├── esm/                  # ES modules
 │   ├── cjs/                  # CommonJS modules
 │   └── index.d.ts            # Type definitions
 ├── scripts/                   # Build and utility scripts
 ├── binding.gyp               # GYP build configuration
-├── rollup.config.mjs         # Rollup bundler configuration
+├── rolldown.config.mjs       # Rolldown bundler configuration
 ├── vitest.config.ts          # Vitest test configuration
 ├── tsconfig.json             # TypeScript configuration
 └── package.json              # Node.js package configuration
