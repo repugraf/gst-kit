@@ -1045,8 +1045,7 @@ gst-kit/
 
 | Runtime     | Support Level    | Notes                       |
 | ----------- | ---------------- | --------------------------- |
-| Node.js 16+ | ✅ Full          | Minimal version             |
-| Node.js 22+ | ✅ Full          | Latest stable support       |
+| Node.js 16+ | ✅ Full          | Minimum required version    |
 | Bun 1.0+    | ✅ Full          | Alternative runtime support |
 | Deno        | ❌ Not supported | Native module limitations   |
 
