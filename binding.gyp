@@ -13,13 +13,11 @@
             "dependencies": ["<!(node -p \"require('node-addon-api').gyp\")"],
             "defines": [
                 "NAPI_VERSION=<(napi_build_version)",
-                "NAPI_CPP_EXCEPTIONS",
+                "NAPI_DISABLE_CPP_EXCEPTIONS",
                 "BUILDING_NODE_EXTENSION",
             ],
-            "cflags!": ["-fno-exceptions"],
-            "cflags_cc!": ["-fno-exceptions"],
             "xcode_settings": {
-                "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                "GCC_ENABLE_CPP_EXCEPTIONS": "NO",
                 "CLANG_CXX_LIBRARY": "libc++",
                 "MACOSX_DEPLOYMENT_TARGET": "10.7",
             },
@@ -30,7 +28,6 @@
                         "<!@(node -p \"require('child_process').execSync('pkg-config --libs-only-L gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtp-1.0 glib-2.0 gobject-2.0').toString().trim().split('-L').slice(1).map(f => f.trim().replace(/\\\\\\\\ /g, ' ')).join(';')\")"
                     ],
                 },
-                "VCCLCompilerTool": {"AdditionalOptions": ["/EHsc"]},
             },
             "include_dirs": [
                 "<!@(node -p \"require('node-addon-api').include\")",
