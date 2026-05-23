@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 Napi::Object Element::CreateFromGstElement(const Napi::Env &env, GstElement *element) {
   Napi::Function func = DefineClass(env, "Element", {});
