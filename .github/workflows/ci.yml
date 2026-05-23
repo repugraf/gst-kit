@@ -73,22 +73,47 @@ jobs:
 
       - name: Install GStreamer dependencies (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         env:
           GST_VERSION: "1.26.11"
           GST_INSTALL_DIR: 'C:\Program Files\gstreamer'
         run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+
           choco install -y --no-progress pkgconfiglite
-          curl -fL -o "$RUNNER_TEMP/gstreamer.msi" \
-            "https://gstreamer.freedesktop.org/data/pkg/windows/${GST_VERSION}/msvc/gstreamer-1.0-msvc-x86_64-${GST_VERSION}.msi"
-          curl -fL -o "$RUNNER_TEMP/gstreamer-devel.msi" \
-            "https://gstreamer.freedesktop.org/data/pkg/windows/${GST_VERSION}/msvc/gstreamer-1.0-devel-msvc-x86_64-${GST_VERSION}.msi"
-          msiexec.exe //i "$(cygpath -w "$RUNNER_TEMP/gstreamer.msi")" //quiet //qn //norestart ADDLOCAL=ALL "INSTALLDIR=${GST_INSTALL_DIR}"
-          msiexec.exe //i "$(cygpath -w "$RUNNER_TEMP/gstreamer-devel.msi")" //quiet //qn //norestart ADDLOCAL=ALL "INSTALLDIR=${GST_INSTALL_DIR}"
-          GST_ROOT="/c/Program Files/gstreamer/1.0/msvc_x86_64"
-          test -f "${GST_ROOT}/lib/pkgconfig/gstreamer-1.0.pc" || { echo "gstreamer-1.0.pc not found"; ls -la "${GST_ROOT}/lib/pkgconfig/" || true; exit 1; }
-          echo "PKG_CONFIG_PATH=${GST_ROOT}/lib/pkgconfig" >> $GITHUB_ENV
-          echo "GSTREAMER_1_0_ROOT_MSVC_X86_64=${GST_INSTALL_DIR}\\1.0\\msvc_x86_64" >> $GITHUB_ENV
-          echo "${GST_ROOT}/bin" >> $GITHUB_PATH
+
+          $runtimeMsi = Join-Path $env:RUNNER_TEMP 'gstreamer.msi'
+          $develMsi   = Join-Path $env:RUNNER_TEMP 'gstreamer-devel.msi'
+          $base = "https://gstreamer.freedesktop.org/data/pkg/windows/$env:GST_VERSION/msvc"
+          Invoke-WebRequest -Uri "$base/gstreamer-1.0-msvc-x86_64-$env:GST_VERSION.msi"       -OutFile $runtimeMsi
+          Invoke-WebRequest -Uri "$base/gstreamer-1.0-devel-msvc-x86_64-$env:GST_VERSION.msi" -OutFile $develMsi
+
+          function Install-Msi($msi, $logName) {
+            $log = Join-Path $env:RUNNER_TEMP $logName
+            $args = @('/i', $msi, '/quiet', '/qn', '/norestart', '/l*v', $log,
+                      'ADDLOCAL=ALL', "INSTALLDIR=`"$env:GST_INSTALL_DIR`"")
+            $p = Start-Process -FilePath msiexec.exe -ArgumentList $args -Wait -NoNewWindow -PassThru
+            if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) {
+              Write-Host "msiexec failed (exit $($p.ExitCode)). Tail of log:"
+              Get-Content $log -Tail 50
+              exit $p.ExitCode
+            }
+          }
+          Install-Msi $runtimeMsi 'gstreamer-runtime.log'
+          Install-Msi $develMsi   'gstreamer-devel.log'
+
+          $gstRoot = Join-Path $env:GST_INSTALL_DIR '1.0\msvc_x86_64'
+          $pcFile  = Join-Path $gstRoot 'lib\pkgconfig\gstreamer-1.0.pc'
+          if (-not (Test-Path $pcFile)) {
+            Write-Host "gstreamer-1.0.pc not found at $pcFile"
+            Get-ChildItem $env:GST_INSTALL_DIR -Recurse -Filter '*.pc' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            exit 1
+          }
+
+          "PKG_CONFIG_PATH=$gstRoot\lib\pkgconfig"        | Out-File -FilePath $env:GITHUB_ENV  -Append -Encoding utf8
+          "GSTREAMER_1_0_ROOT_MSVC_X86_64=$gstRoot"       | Out-File -FilePath $env:GITHUB_ENV  -Append -Encoding utf8
+          "$gstRoot\bin"                                  | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install dependencies (Node.js)
         if: matrix.runtime.kind == 'node'
