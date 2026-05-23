@@ -73,10 +73,21 @@ jobs:
 
       - name: Install GStreamer dependencies (Windows)
         if: matrix.os == 'windows-latest'
+        env:
+          GST_VERSION: "1.24.10"
+          GST_INSTALL_DIR: 'C:\Program Files\gstreamer'
         run: |
-          choco install -y --no-progress gstreamer gstreamer-devel pkgconfiglite
-          GST_ROOT="/c/gstreamer/1.0/msvc_x86_64"
+          choco install -y --no-progress pkgconfiglite
+          curl -fL -o "$RUNNER_TEMP/gstreamer.msi" \
+            "https://gstreamer.freedesktop.org/data/pkg/windows/${GST_VERSION}/msvc/gstreamer-1.0-msvc-x86_64-${GST_VERSION}.msi"
+          curl -fL -o "$RUNNER_TEMP/gstreamer-devel.msi" \
+            "https://gstreamer.freedesktop.org/data/pkg/windows/${GST_VERSION}/msvc/gstreamer-1.0-devel-msvc-x86_64-${GST_VERSION}.msi"
+          msiexec.exe //i "$(cygpath -w "$RUNNER_TEMP/gstreamer.msi")" //quiet //qn //norestart ADDLOCAL=ALL "INSTALLDIR=${GST_INSTALL_DIR}"
+          msiexec.exe //i "$(cygpath -w "$RUNNER_TEMP/gstreamer-devel.msi")" //quiet //qn //norestart ADDLOCAL=ALL "INSTALLDIR=${GST_INSTALL_DIR}"
+          GST_ROOT="/c/Program Files/gstreamer/1.0/msvc_x86_64"
+          test -f "${GST_ROOT}/lib/pkgconfig/gstreamer-1.0.pc" || { echo "gstreamer-1.0.pc not found"; ls -la "${GST_ROOT}/lib/pkgconfig/" || true; exit 1; }
           echo "PKG_CONFIG_PATH=${GST_ROOT}/lib/pkgconfig" >> $GITHUB_ENV
+          echo "GSTREAMER_1_0_ROOT_MSVC_X86_64=${GST_INSTALL_DIR}\\1.0\\msvc_x86_64" >> $GITHUB_ENV
           echo "${GST_ROOT}/bin" >> $GITHUB_PATH
 
       - name: Install dependencies (Node.js)
