@@ -2,7 +2,6 @@
     "targets": [
         {
             "target_name": "gst_kit",
-            "cxx_std": "c++20",
             "variables": {
                 "napi_build_version%": "9",
             },
@@ -19,12 +18,17 @@
                 "NAPI_DISABLE_CPP_EXCEPTIONS",
                 "BUILDING_NODE_EXTENSION",
             ],
+            "cflags_cc": ["-std=c++20"],
             "xcode_settings": {
                 "GCC_ENABLE_CPP_EXCEPTIONS": "NO",
                 "CLANG_CXX_LIBRARY": "libc++",
-                "MACOSX_DEPLOYMENT_TARGET": "10.7",
+                "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+                "MACOSX_DEPLOYMENT_TARGET": "10.13",
             },
             "msvs_settings": {
+                "VCCLCompilerTool": {
+                    "LanguageStandard": "stdcpp20",
+                },
                 "VCLinkerTool": {
                     "SetChecksum": "true",
                     "AdditionalLibraryDirectories": [
