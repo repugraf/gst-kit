@@ -9,7 +9,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 ### Modern Runtime Support
 
 - **N-API instead of NAN**: Uses Node-API (N-API) for better runtime stability and version independence
-- **Multi-runtime compatibility**: Supports Node.js 20+, Bun, and other V8-based runtimes
+- **Multi-runtime compatibility**: Supports Node.js 20+, Bun, Deno, and other V8-based runtimes
 - **Version independence**: Not bound to specific V8 versions, ensuring longevity
 
 ### Modern Build System
@@ -65,7 +65,7 @@ npm install gst-kit
 
 ### System Requirements
 
-- **Runtime**: Node.js 20+ or Bun (Deno is not supported)
+- **Runtime**: Node.js 20+, Bun, or Deno
 - **System**: GStreamer 1.14 or higher (1.26+ recommended)
 - **Build Tools**: Python 2.7 or 3.x (for node-gyp), pkg-config
 - **Dependencies**: GStreamer development packages and plugins
@@ -1043,11 +1043,11 @@ gst-kit/
 
 ## Runtime Compatibility
 
-| Runtime     | Support Level    | Notes                       |
-| ----------- | ---------------- | --------------------------- |
-| Node.js 20+ | ✅ Full          | Minimum required version    |
-| Bun         | ✅ Full          | Alternative runtime support |
-| Deno        | ❌ Not supported | Native module limitations   |
+| Runtime     | Support Level | Notes                       |
+| ----------- | ------------- | --------------------------- |
+| Node.js 20+ | ✅ Full       | Minimum required version    |
+| Bun         | ✅ Full       | Alternative runtime support |
+| Deno        | ✅ Full       | Alternative runtime support |
 
 ## Platform Compatibility
 
