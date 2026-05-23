@@ -2,70 +2,110 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
+    name: ${{ matrix.runtime.id }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        node-version: [20.x, lts/*, node]
+        runtime:
+          - { id: node-20, kind: node, version: "20.x" }
+          - { id: node-lts, kind: node, version: "lts/*" }
+          - { id: node-latest, kind: node, version: "node" }
+          - { id: bun-latest, kind: bun, version: "latest" }
+          - { id: deno-latest, kind: deno, version: "vx.x.x" }
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - uses: actions/checkout@v4
 
-    - name: Install GStreamer dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libgstreamer1.0-dev \
-          libgstreamer-plugins-base1.0-dev \
-          libgstreamer-plugins-bad1.0-dev \
-          gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good \
-          gstreamer1.0-plugins-bad \
-          gstreamer1.0-plugins-ugly \
-          gstreamer1.0-libav \
-          pkg-config
+      - name: Setup Node.js
+        if: matrix.runtime.kind == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.runtime.version }}
+          cache: "npm"
 
-    - name: Install GStreamer dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
-        # Set environment variables for GStreamer library paths
-        echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
-        echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=$(brew --prefix)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build project
-      run: npm run build
+      - name: Setup Bun
+        if: matrix.runtime.kind == 'bun'
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ matrix.runtime.version }}
 
-    - name: Lint code
-      run: npm run lint
-    
-    - name: Run Node.js tests
-      run: npm run test:node
-    
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    
-    - name: Run Bun tests
-      run: npm run test:bun
-    
-    - name: Run unit tests
-      run: npm run test:unit
+      - name: Setup Deno
+        if: matrix.runtime.kind == 'deno'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ matrix.runtime.version }}
+
+      - name: Install GStreamer dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libgstreamer-plugins-bad1.0-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav \
+            pkg-config
+
+      - name: Install GStreamer dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly pkg-config
+          echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$(brew --prefix)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Install dependencies (Node.js)
+        if: matrix.runtime.kind == 'node'
+        run: npm ci
+
+      - name: Install dependencies (Bun)
+        if: matrix.runtime.kind == 'bun'
+        run: bun install --ignore-scripts
+
+      - name: Install dependencies (Deno)
+        if: matrix.runtime.kind == 'deno'
+        run: deno install --node-modules-dir=auto
+
+      - name: Build TypeScript bundle (Node.js)
+        if: matrix.runtime.kind == 'node'
+        run: npm run build:ts
+
+      - name: Build native addon + TypeScript bundle (Bun)
+        if: matrix.runtime.kind == 'bun'
+        run: |
+          bun --bun x node-gyp rebuild
+          bun --bun x rolldown -c rolldown.config.mjs
+
+      - name: Build native addon + TypeScript bundle (Deno)
+        if: matrix.runtime.kind == 'deno'
+        run: |
+          deno run -A --node-modules-dir=auto npm:node-gyp rebuild
+          deno run -A --node-modules-dir=auto npm:rolldown -c rolldown.config.mjs
+
+      - name: Lint code
+        if: matrix.runtime.id == 'node-lts'
+        run: npm run lint
+
+      - name: Run unit tests (Node.js)
+        if: matrix.runtime.kind == 'node'
+        run: npm run test:unit
+
+      - name: Run unit tests (Bun)
+        if: matrix.runtime.kind == 'bun'
+        run: bun x vitest --no-watch
+
+      - name: Run unit tests (Deno)
+        if: matrix.runtime.kind == 'deno'
+        run: deno run -A --node-modules-dir=auto npm:vitest --no-watch

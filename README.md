@@ -9,7 +9,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 ### Modern Runtime Support
 
 - **N-API instead of NAN**: Uses Node-API (N-API) for better runtime stability and version independence
-- **Multi-runtime compatibility**: Supports Node.js 20+, Bun, and other V8-based runtimes
+- **Multi-runtime compatibility**: Supports Node.js 20+, Bun, Deno, and other V8-based runtimes
 - **Version independence**: Not bound to specific V8 versions, ensuring longevity
 
 ### Modern Build System
@@ -65,10 +65,37 @@ npm install gst-kit
 
 ### System Requirements
 
-- **Runtime**: Node.js 20+ or Bun (Deno is not supported)
+- **Runtime**: Node.js 20+, Bun, or Deno
+- **Build-time**: Node.js 20+ is required during installation to run `node-gyp` and the package's postinstall script, even when the target runtime is Bun or Deno. The compiled `.node` addon is runtime-agnostic and loads under any of the three.
 - **System**: GStreamer 1.14 or higher (1.26+ recommended)
 - **Build Tools**: Python 2.7 or 3.x (for node-gyp), pkg-config
 - **Dependencies**: GStreamer development packages and plugins
+
+### Installing with Bun or Deno
+
+Bun and Deno block dependency lifecycle scripts by default, so the postinstall step that compiles the native addon won't run unless you opt in.
+
+**Bun** — trust the package explicitly:
+
+```bash
+bun add gst-kit --trust
+```
+
+Or add it to `trustedDependencies` in your `package.json` so future installs run the postinstall automatically:
+
+```json
+{
+  "trustedDependencies": ["gst-kit"]
+}
+```
+
+**Deno** — allow scripts for this package when installing:
+
+```bash
+deno install --allow-scripts=npm:gst-kit --node-modules-dir=auto npm:gst-kit
+```
+
+In both cases, `node` must be on `PATH` during install so the postinstall script can invoke `node-gyp`.
 
 ### Platform-Specific Installation Guide
 
@@ -1043,11 +1070,11 @@ gst-kit/
 
 ## Runtime Compatibility
 
-| Runtime     | Support Level    | Notes                       |
-| ----------- | ---------------- | --------------------------- |
-| Node.js 20+ | ✅ Full          | Minimum required version    |
-| Bun         | ✅ Full          | Alternative runtime support |
-| Deno        | ❌ Not supported | Native module limitations   |
+| Runtime     | Support Level | Notes                       |
+| ----------- | ------------- | --------------------------- |
+| Node.js 20+ | ✅ Full       | Minimum required version    |
+| Bun         | ✅ Full       | Alternative runtime support |
+| Deno        | ✅ Full       | Alternative runtime support |
 
 ## Platform Compatibility
 

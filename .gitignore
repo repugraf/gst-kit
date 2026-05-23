@@ -50,3 +50,6 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+deno.lock
+bun.lock

@@ -68,3 +68,6 @@ pids/
 .Trashes
 ehthumbs.db
 Thumbs.db 
+
+deno.lock
+bun.lock
