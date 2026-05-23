@@ -74,7 +74,7 @@ jobs:
       - name: Install GStreamer dependencies (Windows)
         if: matrix.os == 'windows-latest'
         env:
-          GST_VERSION: "1.24.10"
+          GST_VERSION: "1.26.11"
           GST_INSTALL_DIR: 'C:\Program Files\gstreamer'
         run: |
           choco install -y --no-progress pkgconfiglite
