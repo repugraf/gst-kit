@@ -19,7 +19,7 @@ jobs:
           - { id: node-lts, kind: node, version: "lts/*" }
           - { id: node-latest, kind: node, version: "node" }
           - { id: bun-latest, kind: bun, version: "latest" }
-          - { id: deno-latest, kind: deno, version: "v2.x" }
+          - { id: deno-latest, kind: deno, version: "vx.x.x" }
 
     steps:
       - uses: actions/checkout@v4
