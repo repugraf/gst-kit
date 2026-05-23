@@ -66,9 +66,36 @@ npm install gst-kit
 ### System Requirements
 
 - **Runtime**: Node.js 20+, Bun, or Deno
+- **Build-time**: Node.js 20+ is required during installation to run `node-gyp` and the package's postinstall script, even when the target runtime is Bun or Deno. The compiled `.node` addon is runtime-agnostic and loads under any of the three.
 - **System**: GStreamer 1.14 or higher (1.26+ recommended)
 - **Build Tools**: Python 2.7 or 3.x (for node-gyp), pkg-config
 - **Dependencies**: GStreamer development packages and plugins
+
+### Installing with Bun or Deno
+
+Bun and Deno block dependency lifecycle scripts by default, so the postinstall step that compiles the native addon won't run unless you opt in.
+
+**Bun** — trust the package explicitly:
+
+```bash
+bun add gst-kit --trust
+```
+
+Or add it to `trustedDependencies` in your `package.json` so future installs run the postinstall automatically:
+
+```json
+{
+  "trustedDependencies": ["gst-kit"]
+}
+```
+
+**Deno** — allow scripts for this package when installing:
+
+```bash
+deno install --allow-scripts=npm:gst-kit --node-modules-dir=auto npm:gst-kit
+```
+
+In both cases, `node` must be on `PATH` during install so the postinstall script can invoke `node-gyp`.
 
 ### Platform-Specific Installation Guide
 
