@@ -3,6 +3,9 @@
         {
             "target_name": "gst_kit",
             "cxx_std": "c++20",
+            "variables": {
+                "napi_build_version%": "9",
+            },
             "sources": [
                 "src/cpp/addon.cpp",
                 "src/cpp/async-workers.cpp",
