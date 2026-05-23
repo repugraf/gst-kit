@@ -23,8 +23,6 @@ jobs:
           - { id: node-latest, kind: node, version: "node" }
           - { id: bun-latest, kind: bun, version: "latest" }
           - { id: deno-latest, kind: deno, version: "vx.x.x" }
-        exclude:
-          - { os: windows-latest, runtime: { id: bun-latest, kind: bun, version: "latest" } }
 
     steps:
       - uses: actions/checkout@v4
