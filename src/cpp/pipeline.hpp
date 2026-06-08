@@ -22,6 +22,7 @@ public:
   Napi::Value query_duration(const Napi::CallbackInfo &info);
   Napi::Value bus_pop(const Napi::CallbackInfo &info);
   Napi::Value seek(const Napi::CallbackInfo &info);
+  Napi::Value end_of_stream(const Napi::CallbackInfo &info);
 
 private:
   std::string pipeline_string;
