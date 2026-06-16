@@ -20,7 +20,6 @@
     "test:unit:deno": "deno run -A --node-modules-dir=auto npm:vitest --no-watch",
     "test": "npm run test:unit",
     "prepublishOnly": "npm run build:ts",
-    "install": "node scripts/patch-node-gyp-lto.mjs",
     "postinstall": "node scripts/ensure-native-addon.mjs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -49,8 +48,8 @@
   "homepage": "https://github.com/repugraf/gst-kit",
   "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
-    "node-addon-api": "8.7.0",
-    "node-gyp": "12.3.0"
+    "node-addon-api": "8.8.0",
+    "node-gyp": "13.0.0"
   },
   "devDependencies": {
     "@types/node": "25.9.1",
