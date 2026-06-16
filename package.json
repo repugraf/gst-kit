@@ -20,6 +20,7 @@
     "test:unit:deno": "deno run -A --node-modules-dir=auto npm:vitest --no-watch",
     "test": "npm run test:unit",
     "prepublishOnly": "npm run build:ts",
+    "install": "node scripts/patch-node-gyp-lto.mjs",
     "postinstall": "node scripts/ensure-native-addon.mjs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
