@@ -145,17 +145,6 @@ interface Pipeline {
   queryDuration(): number;
   busPop(timeoutMs?: number): Promise<GstMessage | null>;
   seek(positionSeconds: number): boolean;
-  /**
-   * Sends an EOS (End-of-Stream) event to the pipeline element.
-   * Returns `true` if the event was accepted, `false` if the pipeline
-   * is not in PLAYING or PAUSED state.
-   *
-   * Note: Calling this on a PAUSED pipeline where sink elements have not
-   * yet received their first buffer (preroll) may block the calling thread,
-   * as GStreamer's event delivery waits on the preroll condition. In practice
-   * this is rare — it mainly affects pipelines paused before any data flows.
-   * Prefer calling `endOfStream()` on a PLAYING pipeline for reliable behavior.
-   */
   endOfStream(): boolean;
 }
 

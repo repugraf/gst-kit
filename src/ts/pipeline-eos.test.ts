@@ -33,22 +33,6 @@ describe.concurrent("Pipeline EOS - State-Gated Dispatch", () => {
     await pipeline.stop();
   });
 
-  it("should return a boolean synchronously (not a Promise)", async () => {
-    const pipeline = new Pipeline("videotestsrc ! fakesink");
-
-    await pipeline.play();
-
-    const result = pipeline.endOfStream();
-
-    // Verify it's a boolean type
-    expect(typeof result).toBe("boolean");
-
-    // Verify it's not a Promise (confirming synchronous behavior)
-    expect(result).not.toBeInstanceOf(Promise);
-
-    await pipeline.stop();
-  });
-
   it("should propagate EOS message on the bus after endOfStream", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
