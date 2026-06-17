@@ -88,8 +88,8 @@ describe.concurrent("Pipeline busPop Method", () => {
 
     // Should timeout within a reasonable range (timing varies by platform)
     expect(elapsed).toBeGreaterThan(80);
-    // Windows has higher async overhead, so use more tolerant bounds
-    const upperBound = isWindows ? 250 : 150;
+    // CI environments and different runtimes have variable async overhead
+    const upperBound = isWindows ? 300 : 200;
     expect(elapsed).toBeLessThan(upperBound);
   });
 

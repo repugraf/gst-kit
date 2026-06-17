@@ -783,6 +783,33 @@ const seekSuccess = pipeline.seek(60);
 console.log("Seek successful:", seekSuccess);
 ```
 
+### Ending a Stream (Pipeline-Level EOS)
+
+```javascript
+import { Pipeline } from "gst-kit";
+
+// Record from a live source and stop cleanly
+const pipeline = new Pipeline("videotestsrc ! theoraenc ! oggmux ! filesink location=out.ogv");
+await pipeline.play();
+
+// Record for 5 seconds, then end the stream gracefully
+setTimeout(async () => {
+  const sent = pipeline.endOfStream();
+  console.log("EOS sent:", sent); // true
+
+  // Wait for the pipeline to finish flushing
+  while (true) {
+    const msg = await pipeline.busPop(1000);
+    if (msg?.type === "eos") {
+      console.log("Recording complete");
+      break;
+    }
+  }
+
+  await pipeline.stop();
+}, 5000);
+```
+
 ### Message Bus Handling
 
 ```javascript
@@ -883,6 +910,9 @@ class Pipeline {
   queryPosition(): number;
   queryDuration(): number;
   seek(positionSeconds: number): boolean;
+
+  // End-of-stream
+  endOfStream(): boolean;
 
   // Message handling
   busPop(timeoutMs?: number): Promise<GstMessage | null>;

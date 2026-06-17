@@ -84,6 +84,11 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
   auto seek_method = Napi::Function::New(
     env, [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->seek(info); }, "seek"
   );
+  auto end_of_stream_method = Napi::Function::New(
+    env,
+    [this](const Napi::CallbackInfo &info) -> Napi::Value { return this->end_of_stream(info); },
+    "endOfStream"
+  );
 
   thisObj.DefineProperties(
     {Napi::PropertyDescriptor::Value("play", play_method, napi_enumerable),
@@ -96,7 +101,8 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
      Napi::PropertyDescriptor::Value("queryPosition", queryPosition_method, napi_enumerable),
      Napi::PropertyDescriptor::Value("queryDuration", queryDuration_method, napi_enumerable),
      Napi::PropertyDescriptor::Value("busPop", busPop_method, napi_enumerable),
-     Napi::PropertyDescriptor::Value("seek", seek_method, napi_enumerable)}
+     Napi::PropertyDescriptor::Value("seek", seek_method, napi_enumerable),
+     Napi::PropertyDescriptor::Value("endOfStream", end_of_stream_method, napi_enumerable)}
   );
 }
 
@@ -268,6 +274,29 @@ Napi::Value Pipeline::seek(const Napi::CallbackInfo &info) {
     GST_SEEK_TYPE_NONE,  // Stop type (no stop position)
     GST_CLOCK_TIME_NONE  // Stop position (unused)
   );
+
+  return Napi::Boolean::New(env, result);
+}
+
+Napi::Value Pipeline::end_of_stream(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  // Query pipeline state with a 5ms timeout
+  // Note: Sending EOS to a PAUSED pipeline where sinks have not yet prerolled
+  // may block, as gst_element_send_event delivers through the streaming thread
+  // which waits on the preroll condition. This is a GStreamer-level behavior.
+  GstState state;
+  GstState pending;
+  gst_element_get_state(GST_ELEMENT(pipeline.get()), &state, &pending, 5 * GST_MSECOND);
+
+  // Only send EOS if pipeline is in PLAYING or PAUSED state
+  if (state != GST_STATE_PLAYING && state != GST_STATE_PAUSED) {
+    return Napi::Boolean::New(env, false);
+  }
+
+  // Send EOS event to the pipeline
+  gboolean result =
+    gst_element_send_event(GST_ELEMENT(pipeline.get()), gst_event_new_eos());
 
   return Napi::Boolean::New(env, result);
 }
