@@ -1048,7 +1048,7 @@ if (sampleResult?.type === "sample") {
 
 - **Vitest**: Modern, fast test runner with concurrent execution
 - **Oxlint**: Fast Rust-based linter with TypeScript support
-- **Prettier**: Code formatting
+- **Oxfmt**: Fast Rust-based code formatter
 - **Coverage**: Built-in test coverage reporting
 
 ## Project Structure
