@@ -23,7 +23,8 @@
     "postinstall": "node scripts/ensure-native-addon.mjs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\""
+    "format": "oxfmt --write",
+    "format:check": "oxfmt --check"
   },
   "keywords": [
     "gstreamer",
@@ -53,8 +54,8 @@
   },
   "devDependencies": {
     "@types/node": "25.9.3",
+    "oxfmt": "0.55.0",
     "oxlint": "1.70.0",
-    "prettier": "3.8.4",
     "rolldown": "1.1.1",
     "rolldown-plugin-dts": "0.25.2",
     "typescript": "6.0.3",

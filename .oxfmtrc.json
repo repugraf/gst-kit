@@ -3,5 +3,7 @@
   "printWidth": 100,
   "arrowParens": "avoid",
   "tabWidth": 2,
-  "singleQuote": false
+  "singleQuote": false,
+  "sortPackageJson": false,
+  "ignorePatterns": []
 }

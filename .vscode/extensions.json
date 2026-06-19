@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "oxc.oxc-vscode",
-    "esbenp.prettier-vscode",
     "streetsidesoftware.code-spell-checker",
     "DavidAnson.vscode-markdownlint",
     "ms-vscode.cpptools"
