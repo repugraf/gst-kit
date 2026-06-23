@@ -147,12 +147,12 @@ jobs:
 
       - name: Run unit tests (Node.js)
         if: matrix.runtime.kind == 'node'
-        run: npm run test:unit
+        run: npm run test:unit:sequential
 
       - name: Run unit tests (Bun)
         if: matrix.runtime.kind == 'bun'
-        run: bun x vitest --no-watch
+        run: bun x vitest --no-watch --no-file-parallelism --sequence.concurrent=false
 
       - name: Run unit tests (Deno)
         if: matrix.runtime.kind == 'deno'
-        run: deno run -A --node-modules-dir=auto npm:vitest --no-watch
+        run: deno run -A --node-modules-dir=auto npm:vitest --no-watch --no-file-parallelism --sequence.concurrent=false
