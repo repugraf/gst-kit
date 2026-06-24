@@ -147,7 +147,7 @@ jobs:
 
       - name: Run unit tests (Node.js)
         if: matrix.runtime.kind == 'node'
-        run: npm run test:unit:sequential
+        run: npm run test:unit
 
       - name: Run unit tests (Bun)
         if: matrix.runtime.kind == 'bun'

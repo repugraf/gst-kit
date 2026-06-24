@@ -17,7 +17,7 @@ This project represents a complete modernization of the old [node-gstreamer-supe
 - **Rolldown bundling**: Generates both CommonJS and ESM modules for maximum compatibility
 - **TypeScript-first**: Complete TypeScript support with full type definitions
 - **GYP build system**: Robust C++ compilation with proper dependency management
-- **Modern testing**: Uses Vitest for fast, concurrent testing instead of legacy test frameworks
+- **Modern testing**: Uses Vitest for fast testing instead of legacy test frameworks
 
 ### Enhanced Developer Experience
 
@@ -1046,7 +1046,7 @@ if (sampleResult?.type === "sample") {
 
 ### Testing & Quality
 
-- **Vitest**: Modern, fast test runner with concurrent execution
+- **Vitest**: Modern, fast test runner
 - **Oxlint**: Fast Rust-based linter with TypeScript support
 - **Prettier**: Code formatting
 - **Coverage**: Built-in test coverage reporting
@@ -1093,7 +1093,6 @@ gst-kit/
 
 ## Performance Considerations
 
-- **Concurrent Testing**: All tests run concurrently for faster execution
 - **Efficient Memory Management**: Proper buffer lifecycle management
 - **Async Operations**: Non-blocking operations for better performance
 - **Type Safety**: Compile-time error detection reduces runtime overhead
