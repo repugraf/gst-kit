@@ -6,8 +6,6 @@ describe("Element Properties", () => {
     const caps = "video/x-raw,format=(string)GRAY8";
     const pipeline = new Pipeline(`videotestsrc ! capsfilter name=target caps=${caps} ! fakesink`);
 
-    await pipeline.play();
-
     const element = pipeline.getElementByName("target");
 
     if (!element) throw new Error("Element not found");
@@ -17,9 +15,6 @@ describe("Element Properties", () => {
     expect(prop).not.toBeNull();
     expect(prop?.type).toBe("primitive");
     caps.split(",").forEach(cap => expect(prop?.value).toContain(cap));
-
-    await new Promise(resolve => setTimeout(resolve, 10));
-    await pipeline.stop();
   });
 
   it("should set string property", () => {
