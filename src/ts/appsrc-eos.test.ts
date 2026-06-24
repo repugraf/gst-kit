@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
 
-describe.concurrent("AppSrc End-of-Stream", () => {
+describe("AppSrc End-of-Stream", () => {
   it("should send EOS signal through endOfStream method", async () => {
     const pipeline = new Pipeline("appsrc name=source ! fakesink");
     const source = pipeline.getElementByName("source");
@@ -44,6 +44,7 @@ describe.concurrent("AppSrc End-of-Stream", () => {
         }
       }
 
+      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       expect(eosReceived).toBe(true);
@@ -63,6 +64,8 @@ describe.concurrent("AppSrc End-of-Stream", () => {
         source.endOfStream();
       }).toThrow();
     }
+
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     await pipeline.stop();
   });
@@ -91,6 +94,8 @@ describe.concurrent("AppSrc End-of-Stream", () => {
         // It's acceptable for the second call to fail
         expect(error).toBeDefined();
       }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       await pipeline.stop();
     }

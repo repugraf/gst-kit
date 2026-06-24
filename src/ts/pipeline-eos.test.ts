@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
 
-describe.concurrent("Pipeline EOS - State-Gated Dispatch", () => {
+describe("Pipeline EOS - State-Gated Dispatch", () => {
   it("should return true when pipeline is in PLAYING state", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
@@ -53,6 +53,7 @@ describe.concurrent("Pipeline EOS - State-Gated Dispatch", () => {
       }
     }
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(eosMessage).not.toBeNull();
@@ -72,6 +73,7 @@ describe.concurrent("Pipeline EOS - State-Gated Dispatch", () => {
     expect(result2).toBe(true);
     expect(result3).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -83,6 +85,7 @@ describe.concurrent("Pipeline EOS - State-Gated Dispatch", () => {
     const resultWhilePlaying = pipeline.endOfStream();
     expect(resultWhilePlaying).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     const resultAfterStop = pipeline.endOfStream();

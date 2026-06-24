@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Pipeline } from "./";
 
-describe.concurrent("Pipeline Pad Methods", () => {
+describe("Pipeline Pad Methods", () => {
   it("should get pad information from an element", () => {
     const pipeline = new Pipeline("videotestsrc name=source ! fakesink name=sink");
     const element = pipeline.getElementByName("source");
@@ -57,6 +57,9 @@ describe.concurrent("Pipeline Pad Methods", () => {
     expect(() => sel.setPad("active-pad", "sink_0")).not.toThrow();
     expect(() => sel.setPad("active-pad", "sink_1")).not.toThrow();
     expect(() => sel.setPad("active-pad", "sink_0")).not.toThrow();
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
   });
 
   it("should throw error for setPad with invalid element", () => {
@@ -124,6 +127,7 @@ describe.concurrent("Pipeline Pad Methods", () => {
       expect(srcPad.caps).toContain("height=(int)480");
     }
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 });

@@ -2,14 +2,15 @@ import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
 import { isWindows } from "./test-utils";
 
-describe.concurrent("Pipeline busPop Method", () => {
+describe("Pipeline busPop Method", () => {
   it("should return null when no message available with timeout", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
     // Try to pop a message with a very short timeout (10ms)
     const message = await pipeline.busPop(10);
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     // Should return null when timeout expires with no messages
     expect(message).toBeNull();
@@ -24,7 +25,8 @@ describe.concurrent("Pipeline busPop Method", () => {
     // Pop a message with reasonable timeout
     const message = await pipeline.busPop(1000);
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     expect(message).not.toBeNull();
     expect(typeof message?.type).toBe("string");
@@ -52,7 +54,8 @@ describe.concurrent("Pipeline busPop Method", () => {
       }
     }
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     // Should have found at least one message during pipeline startup
     expect(foundMessage).toBe(true);
@@ -66,7 +69,8 @@ describe.concurrent("Pipeline busPop Method", () => {
 
     const message = await pipeline.busPop(1000);
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     if (message && message.type === "error") {
       expect(message.errorMessage).toBeDefined();
@@ -84,7 +88,8 @@ describe.concurrent("Pipeline busPop Method", () => {
     const endTime = Date.now();
     const elapsed = endTime - startTime;
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     // Should timeout within a reasonable range (timing varies by platform)
     expect(elapsed).toBeGreaterThan(80);
@@ -101,7 +106,8 @@ describe.concurrent("Pipeline busPop Method", () => {
     // Use -1 for infinite timeout, but pipeline should generate EOS quickly
     const message = await pipeline.busPop(-1);
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     // Should get a message (likely EOS or state-changed)
     expect(message).not.toBeNull();
@@ -127,7 +133,8 @@ describe.concurrent("Pipeline busPop Method", () => {
       }
     }
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     if (messageWithStructure) {
       expect(messageWithStructure.structureName).toBeDefined();
@@ -149,6 +156,7 @@ describe.concurrent("Pipeline busPop Method", () => {
       message = await pipeline.busPop();
     } while (message?.type !== "element" || message?.srcElementName !== "lev");
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(message?.peak).toBeInstanceOf(Array);

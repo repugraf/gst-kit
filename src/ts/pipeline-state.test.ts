@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 
-describe.concurrent("Pipeline State Management", () => {
+describe("Pipeline State Management", () => {
   it("should play a pipeline", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
@@ -10,6 +10,7 @@ describe.concurrent("Pipeline State Management", () => {
     // Check that the pipeline is playing
     expect(pipeline.playing()).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -24,6 +25,7 @@ describe.concurrent("Pipeline State Management", () => {
     // After pausing, pipeline should not be in playing state
     expect(pipeline.playing()).toBe(false);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -33,6 +35,7 @@ describe.concurrent("Pipeline State Management", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // After stopping, pipeline should not be playing
@@ -54,6 +57,7 @@ describe.concurrent("Pipeline State Management", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -67,6 +71,7 @@ describe.concurrent("Pipeline State Management", () => {
     await pipeline.pause();
     expect(pipeline.playing()).toBe(false);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -89,6 +94,7 @@ describe.concurrent("Pipeline State Management", () => {
     await pipeline.play(); // play again (should be safe)
     expect(pipeline.playing()).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
     expect(pipeline.playing()).toBe(false);
 
@@ -127,6 +133,9 @@ describe.concurrent("Pipeline State Management", () => {
     expect(positionWhilePlaying).toBeGreaterThan(0);
     expect(positionWhilePaused).toBeGreaterThanOrEqual(0);
     expect(positionAfterResume).toBeGreaterThan(0);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
   });
 
   it("should provide detailed state change information", async () => {
@@ -149,6 +158,8 @@ describe.concurrent("Pipeline State Management", () => {
     expect(stopResult.result).toBe("success");
     expect(stopResult.targetState).toBe(1); // GST_STATE_NULL
     expect(stopResult.finalState).toBe(1);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   it("should accept timeout in milliseconds", async () => {

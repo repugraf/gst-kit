@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample } from ".";
 
-describe.concurrent("FakeSink", () => {
+describe("FakeSink", () => {
   it("should capture last sample when enabled", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink enable-last-sample=true name=sink");
     const fakesink = pipeline.getElementByName("sink");
@@ -13,7 +13,8 @@ describe.concurrent("FakeSink", () => {
     // Get the last sample
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     expect(sampleResult).not.toBeNull();
     expect(sampleResult?.type).toBe("sample");
@@ -45,7 +46,7 @@ describe.concurrent("FakeSink", () => {
     // Try to get the last sample (should be null since it's disabled)
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(sampleResult).toBeNull();
   });
@@ -62,6 +63,7 @@ describe.concurrent("FakeSink", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
     expect(pipeline.playing()).toBe(false);
   });
@@ -82,7 +84,7 @@ describe.concurrent("FakeSink", () => {
 
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(sampleResult).not.toBeNull();
     expect(sampleResult?.type).toBe("sample");
@@ -108,7 +110,8 @@ describe.concurrent("FakeSink", () => {
 
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    pipeline.stop();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await pipeline.stop();
 
     expect(sampleResult).not.toBeNull();
     expect(sampleResult?.type).toBe("sample");
