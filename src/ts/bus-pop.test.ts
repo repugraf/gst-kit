@@ -9,7 +9,6 @@ describe("Pipeline busPop Method", () => {
     // Try to pop a message with a very short timeout (10ms)
     const message = await pipeline.busPop(10);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Should return null when timeout expires with no messages
@@ -25,7 +24,6 @@ describe("Pipeline busPop Method", () => {
     // Pop a message with reasonable timeout
     const message = await pipeline.busPop(1000);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(message).not.toBeNull();
@@ -54,7 +52,6 @@ describe("Pipeline busPop Method", () => {
       }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Should have found at least one message during pipeline startup
@@ -69,7 +66,6 @@ describe("Pipeline busPop Method", () => {
 
     const message = await pipeline.busPop(1000);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     if (message && message.type === "error") {
@@ -88,7 +84,6 @@ describe("Pipeline busPop Method", () => {
     const endTime = Date.now();
     const elapsed = endTime - startTime;
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Should timeout within a reasonable range (timing varies by platform)
@@ -106,7 +101,6 @@ describe("Pipeline busPop Method", () => {
     // Use -1 for infinite timeout, but pipeline should generate EOS quickly
     const message = await pipeline.busPop(-1);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Should get a message (likely EOS or state-changed)
@@ -133,7 +127,6 @@ describe("Pipeline busPop Method", () => {
       }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     if (messageWithStructure) {
@@ -156,7 +149,6 @@ describe("Pipeline busPop Method", () => {
       message = await pipeline.busPop();
     } while (message?.type !== "element" || message?.srcElementName !== "lev");
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(message?.peak).toBeInstanceOf(Array);

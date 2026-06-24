@@ -28,7 +28,6 @@ describe("Pipeline Seek Method", () => {
       console.warn("Position query returned -1, this is known Windows behavior");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -54,7 +53,6 @@ describe("Pipeline Seek Method", () => {
       console.warn("Position query returned -1, this is known Windows behavior");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -155,7 +153,6 @@ describe("Pipeline Seek Method", () => {
       expect(position).toBeLessThan(2.2);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -193,7 +190,6 @@ describe("Pipeline Seek Method", () => {
       expect(typeof position).toBe("number");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 

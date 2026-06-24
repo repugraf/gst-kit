@@ -26,7 +26,6 @@ describe("codec", () => {
         currFrames++;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       const keyFrame = samples.find(e =>
@@ -61,7 +60,6 @@ describe("codec", () => {
       });
 
       unsubscribe();
-      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       expect(bufferData).toBeDefined();

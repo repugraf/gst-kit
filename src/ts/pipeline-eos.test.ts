@@ -10,6 +10,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
     const result = pipeline.endOfStream();
     expect(result).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 30));
+
     await pipeline.stop();
   });
 
@@ -21,6 +23,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
     const result = pipeline.endOfStream();
     expect(result).toBe(true);
 
+    await new Promise(resolve => setTimeout(resolve, 30));
+
     await pipeline.stop();
   });
 
@@ -29,6 +33,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
 
     const result = pipeline.endOfStream();
     expect(result).toBe(false);
+
+    await new Promise(resolve => setTimeout(resolve, 30));
 
     await pipeline.stop();
   });
@@ -53,7 +59,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
       }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, 30));
+
     await pipeline.stop();
 
     expect(eosMessage).not.toBeNull();
@@ -73,7 +80,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
     expect(result2).toBe(true);
     expect(result3).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, 30));
+
     await pipeline.stop();
   });
 
@@ -85,7 +93,8 @@ describe("Pipeline EOS - State-Gated Dispatch", () => {
     const resultWhilePlaying = pipeline.endOfStream();
     expect(resultWhilePlaying).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, 30));
+
     await pipeline.stop();
 
     const resultAfterStop = pipeline.endOfStream();

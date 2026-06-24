@@ -9,7 +9,6 @@ describe("Pipeline Query Methods", () => {
 
     const position = pipeline.queryPosition();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Position should be a number (could be -1 if not available)
@@ -23,7 +22,6 @@ describe("Pipeline Query Methods", () => {
 
     const duration = pipeline.queryDuration();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // Duration should be a number (could be -1 if not available)

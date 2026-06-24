@@ -58,7 +58,6 @@ describe("Pipeline Pad Methods", () => {
     expect(() => sel.setPad("active-pad", "sink_1")).not.toThrow();
     expect(() => sel.setPad("active-pad", "sink_0")).not.toThrow();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -127,7 +126,6 @@ describe("Pipeline Pad Methods", () => {
       expect(srcPad.caps).toContain("height=(int)480");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 });

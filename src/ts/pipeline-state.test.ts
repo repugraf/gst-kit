@@ -10,7 +10,6 @@ describe("Pipeline State Management", () => {
     // Check that the pipeline is playing
     expect(pipeline.playing()).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -25,7 +24,6 @@ describe("Pipeline State Management", () => {
     // After pausing, pipeline should not be in playing state
     expect(pipeline.playing()).toBe(false);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -35,7 +33,6 @@ describe("Pipeline State Management", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // After stopping, pipeline should not be playing
@@ -57,7 +54,6 @@ describe("Pipeline State Management", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -71,7 +67,6 @@ describe("Pipeline State Management", () => {
     await pipeline.pause();
     expect(pipeline.playing()).toBe(false);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -94,7 +89,6 @@ describe("Pipeline State Management", () => {
     await pipeline.play(); // play again (should be safe)
     expect(pipeline.playing()).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
     expect(pipeline.playing()).toBe(false);
 
@@ -134,7 +128,6 @@ describe("Pipeline State Management", () => {
     expect(positionWhilePaused).toBeGreaterThanOrEqual(0);
     expect(positionAfterResume).toBeGreaterThan(0);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
   });
 
@@ -158,8 +151,6 @@ describe("Pipeline State Management", () => {
     expect(stopResult.result).toBe("success");
     expect(stopResult.targetState).toBe(1); // GST_STATE_NULL
     expect(stopResult.finalState).toBe(1);
-
-    await new Promise(resolve => setTimeout(resolve, 10));
   });
 
   it("should accept timeout in milliseconds", async () => {

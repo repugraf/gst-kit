@@ -13,7 +13,6 @@ describe("AppSink", () => {
 
     const result = await sink.getSample();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(result).not.toBeNull();
@@ -35,7 +34,6 @@ describe("AppSink", () => {
 
       const result = await sink.getSample(10);
 
-      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       expect(result).toBeNull();
@@ -50,7 +48,6 @@ describe("AppSink", () => {
 
     const result = await sink.getSample();
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(result).toBeNull();
@@ -77,7 +74,6 @@ describe("AppSink", () => {
       currFrames++;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(currFrames).toBe(frames);
@@ -106,7 +102,6 @@ describe("AppSink", () => {
     });
 
     unsubscribe();
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(samples).toHaveLength(frames);

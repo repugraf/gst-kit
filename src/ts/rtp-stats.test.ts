@@ -18,7 +18,6 @@ describe("RTP Statistics", () => {
 
       const statsResult = depayloader.getElementProperty("stats");
 
-      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       expect(statsResult).toBeDefined();
@@ -102,7 +101,6 @@ describe("RTP Statistics", () => {
 
     const statsResult = sink.getElementProperty("stats");
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     // fakesink has stats but different type (basesink stats, not RTP depayload stats)

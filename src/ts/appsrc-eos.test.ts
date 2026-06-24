@@ -44,7 +44,6 @@ describe("AppSrc End-of-Stream", () => {
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10));
       await pipeline.stop();
 
       expect(eosReceived).toBe(true);
@@ -64,8 +63,6 @@ describe("AppSrc End-of-Stream", () => {
         source.endOfStream();
       }).toThrow();
     }
-
-    await new Promise(resolve => setTimeout(resolve, 10));
 
     await pipeline.stop();
   });
@@ -94,8 +91,6 @@ describe("AppSrc End-of-Stream", () => {
         // It's acceptable for the second call to fail
         expect(error).toBeDefined();
       }
-
-      await new Promise(resolve => setTimeout(resolve, 10));
 
       await pipeline.stop();
     }

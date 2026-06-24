@@ -13,7 +13,6 @@ describe("FakeSink", () => {
     // Get the last sample
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(sampleResult).not.toBeNull();
@@ -63,7 +62,6 @@ describe("FakeSink", () => {
     await pipeline.play();
     expect(pipeline.playing()).toBe(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
     expect(pipeline.playing()).toBe(false);
   });
@@ -110,7 +108,6 @@ describe("FakeSink", () => {
 
     const sampleResult = fakesink.getElementProperty("last-sample");
 
-    await new Promise(resolve => setTimeout(resolve, 10));
     await pipeline.stop();
 
     expect(sampleResult).not.toBeNull();
