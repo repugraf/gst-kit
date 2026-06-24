@@ -106,6 +106,12 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
   );
 }
 
+Pipeline::~Pipeline() {
+  if (pipeline) {
+    gst_element_set_state(GST_ELEMENT(pipeline.get()), GST_STATE_NULL);
+  }
+}
+
 Napi::Value Pipeline::play(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -295,8 +301,7 @@ Napi::Value Pipeline::end_of_stream(const Napi::CallbackInfo &info) {
   }
 
   // Send EOS event to the pipeline
-  gboolean result =
-    gst_element_send_event(GST_ELEMENT(pipeline.get()), gst_event_new_eos());
+  gboolean result = gst_element_send_event(GST_ELEMENT(pipeline.get()), gst_event_new_eos());
 
   return Napi::Boolean::New(env, result);
 }
