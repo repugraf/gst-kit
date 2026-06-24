@@ -12,7 +12,6 @@ public:
   static Napi::Value ElementExists(const Napi::CallbackInfo &info);
 
   Pipeline(const Napi::CallbackInfo &info);
-  ~Pipeline();
 
   Napi::Value play(const Napi::CallbackInfo &info);
   Napi::Value pause(const Napi::CallbackInfo &info);

@@ -106,12 +106,6 @@ Pipeline::Pipeline(const Napi::CallbackInfo &info) :
   );
 }
 
-Pipeline::~Pipeline() {
-  if (pipeline) {
-    gst_element_set_state(GST_ELEMENT(pipeline.get()), GST_STATE_NULL);
-  }
-}
-
 Napi::Value Pipeline::play(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
