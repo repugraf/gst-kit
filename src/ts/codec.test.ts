@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample, GstBufferFlags, type BufferData } from ".";
 import { arePluginsAvailable } from "./test-utils";
 
-describe.concurrent("codec", () => {
+describe("codec", () => {
   it.skipIf(!arePluginsAvailable(["x264enc", "rtph264pay", "rtph264depay", "h264parse"]))(
     "should be able to distinguish between delta and key frames",
     async () => {
@@ -26,7 +26,7 @@ describe.concurrent("codec", () => {
         currFrames++;
       }
 
-      pipeline.stop();
+      await pipeline.stop();
 
       const keyFrame = samples.find(e =>
         e.flags ? !(e.flags & GstBufferFlags.GST_BUFFER_FLAG_DELTA_UNIT) : false
@@ -60,7 +60,7 @@ describe.concurrent("codec", () => {
       });
 
       unsubscribe();
-      pipeline.stop();
+      await pipeline.stop();
 
       expect(bufferData).toBeDefined();
       expect(bufferData.buffer).toBeDefined();

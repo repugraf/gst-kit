@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Pipeline, type GStreamerSample } from ".";
 import { arePluginsAvailable } from "./test-utils";
 
-describe.concurrent("AppSink", () => {
+describe("AppSink", () => {
   it("should pull frames", async () => {
     const pipeline = new Pipeline("videotestsrc ! videoconvert ! appsink name=sink");
     const sink = pipeline.getElementByName("sink");
@@ -13,7 +13,7 @@ describe.concurrent("AppSink", () => {
 
     const result = await sink.getSample();
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(result).not.toBeNull();
     expect(result?.buffer).toBeDefined();
@@ -34,7 +34,7 @@ describe.concurrent("AppSink", () => {
 
       const result = await sink.getSample(10);
 
-      pipeline.stop();
+      await pipeline.stop();
 
       expect(result).toBeNull();
     }
@@ -48,7 +48,7 @@ describe.concurrent("AppSink", () => {
 
     const result = await sink.getSample();
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(result).toBeNull();
   });
@@ -74,7 +74,7 @@ describe.concurrent("AppSink", () => {
       currFrames++;
     }
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(currFrames).toBe(frames);
   });
@@ -102,7 +102,7 @@ describe.concurrent("AppSink", () => {
     });
 
     unsubscribe();
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(samples).toHaveLength(frames);
     expect(samples[0].buffer).toBeDefined();

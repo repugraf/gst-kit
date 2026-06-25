@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 
-describe.concurrent("Pipeline Query Methods", () => {
+describe("Pipeline Query Methods", () => {
   it("should query position from videotestsrc pipeline", async () => {
     const pipeline = new Pipeline("videotestsrc num-buffers=100 ! fakesink");
 
@@ -9,7 +9,7 @@ describe.concurrent("Pipeline Query Methods", () => {
 
     const position = pipeline.queryPosition();
 
-    pipeline.stop();
+    await pipeline.stop();
 
     // Position should be a number (could be -1 if not available)
     expect(typeof position).toBe("number");
@@ -22,7 +22,7 @@ describe.concurrent("Pipeline Query Methods", () => {
 
     const duration = pipeline.queryDuration();
 
-    pipeline.stop();
+    await pipeline.stop();
 
     // Duration should be a number (could be -1 if not available)
     expect(typeof duration).toBe("number");
@@ -54,7 +54,7 @@ describe.concurrent("Pipeline Query Methods", () => {
 
     const position2 = pipeline.queryPosition();
 
-    pipeline.stop();
+    await pipeline.stop();
 
     expect(typeof position1).toBe("number");
     expect(typeof position2).toBe("number");

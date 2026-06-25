@@ -1,12 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Pipeline } from "./";
 
-describe.concurrent("Element Properties", () => {
+describe("Element Properties", () => {
   it("should get prop value", async () => {
     const caps = "video/x-raw,format=(string)GRAY8";
     const pipeline = new Pipeline(`videotestsrc ! capsfilter name=target caps=${caps} ! fakesink`);
-
-    await pipeline.play();
 
     const element = pipeline.getElementByName("target");
 
@@ -17,8 +15,6 @@ describe.concurrent("Element Properties", () => {
     expect(prop).not.toBeNull();
     expect(prop?.type).toBe("primitive");
     caps.split(",").forEach(cap => expect(prop?.value).toContain(cap));
-
-    await pipeline.stop();
   });
 
   it("should set string property", () => {

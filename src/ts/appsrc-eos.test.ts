@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline, type GstMessage } from ".";
 
-describe.concurrent("AppSrc End-of-Stream", () => {
+describe("AppSrc End-of-Stream", () => {
   it("should send EOS signal through endOfStream method", async () => {
     const pipeline = new Pipeline("appsrc name=source ! fakesink");
     const source = pipeline.getElementByName("source");

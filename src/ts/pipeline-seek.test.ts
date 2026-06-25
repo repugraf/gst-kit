@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 import { isWindows } from "./test-utils";
 
-describe.concurrent("Pipeline Seek Method", () => {
+describe("Pipeline Seek Method", () => {
   it("should seek to a specific position in a video pipeline", async () => {
     const pipeline = new Pipeline(
       "videotestsrc num-buffers=300 ! video/x-raw,framerate=30/1 ! fakesink"

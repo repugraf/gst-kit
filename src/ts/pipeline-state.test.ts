@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Pipeline } from ".";
 
-describe.concurrent("Pipeline State Management", () => {
+describe("Pipeline State Management", () => {
   it("should play a pipeline", async () => {
     const pipeline = new Pipeline("videotestsrc ! fakesink");
 
@@ -127,6 +127,8 @@ describe.concurrent("Pipeline State Management", () => {
     expect(positionWhilePlaying).toBeGreaterThan(0);
     expect(positionWhilePaused).toBeGreaterThanOrEqual(0);
     expect(positionAfterResume).toBeGreaterThan(0);
+
+    await pipeline.stop();
   });
 
   it("should provide detailed state change information", async () => {

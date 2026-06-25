@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Pipeline, type BufferData } from ".";
 import { arePluginsAvailable } from "./test-utils";
 
-describe.concurrent("RTP Statistics", () => {
+describe("RTP Statistics", () => {
   it.skipIf(!arePluginsAvailable(["x264enc", "rtph264pay", "rtph264depay", "h264parse"]))(
     "should extract RTP stats from rtph264depay stats property",
     async () => {
@@ -18,7 +18,7 @@ describe.concurrent("RTP Statistics", () => {
 
       const statsResult = depayloader.getElementProperty("stats");
 
-      pipeline.stop();
+      await pipeline.stop();
 
       expect(statsResult).toBeDefined();
       expect(statsResult).not.toBeNull();
@@ -76,7 +76,7 @@ describe.concurrent("RTP Statistics", () => {
 
       const statsResult = depayloader.getElementProperty("stats");
 
-      pipeline.stop();
+      await pipeline.stop();
 
       // Verify pad probe captured RTP data
       expect(padProbeRtpData).toBeDefined();
@@ -101,7 +101,7 @@ describe.concurrent("RTP Statistics", () => {
 
     const statsResult = sink.getElementProperty("stats");
 
-    pipeline.stop();
+    await pipeline.stop();
 
     // fakesink has stats but different type (basesink stats, not RTP depayload stats)
     expect(statsResult).toBeDefined();
