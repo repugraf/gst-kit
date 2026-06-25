@@ -3,19 +3,33 @@
     {
       "name": "linux-gcc-x64",
       "includePath": [
-        "${workspaceFolder}/**",
+        "${workspaceFolder}",
+        "${workspaceFolder}/src/cpp",
+        "${workspaceFolder}/node_modules/node-addon-api",
+        "/usr/include/node",
         "/usr/include/gstreamer-1.0",
+        "/usr/include/orc-0.4",
         "/usr/include/x86_64-linux-gnu",
         "/usr/include/glib-2.0",
-        "/usr/lib/x86_64-linux-gnu/glib-2.0/include",
-        "${workspaceFolder}/node_modules/node-addon-api"
+        "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
       ],
-      "compilerPath": "/usr/lib/ccache/gcc",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/src/cpp",
+          "${workspaceFolder}/node_modules/node-addon-api",
+          "/usr/include/node",
+          "/usr/include/gstreamer-1.0",
+          "/usr/include/orc-0.4",
+          "/usr/include/x86_64-linux-gnu",
+          "/usr/include/glib-2.0",
+          "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+        ]
+      },
+      "compilerPath": "/usr/bin/g++",
+      "cStandard": "c17",
+      "cppStandard": "c++20",
       "intelliSenseMode": "linux-gcc-x64",
-      "compilerArgs": [""],
-      "defines": ["NAPI_CPP_EXCEPTIONS", "BUILDING_NODE_EXTENSION"]
+      "defines": ["NAPI_VERSION=9", "NAPI_DISABLE_CPP_EXCEPTIONS", "BUILDING_NODE_EXTENSION"]
     }
   ],
   "version": 4
