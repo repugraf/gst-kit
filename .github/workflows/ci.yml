@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.runtime.id }} (${{ matrix.os }})
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -17,34 +17,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        runtime:
-          - { id: node-20, kind: node, version: "20.x" }
-          - { id: node-lts, kind: node, version: "lts/*" }
-          - { id: node-latest, kind: node, version: "node" }
-          - { id: bun-latest, kind: bun, version: "latest" }
-          - { id: deno-latest, kind: deno, version: "vx.x.x" }
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        if: matrix.runtime.kind == 'node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.runtime.version }}
-          cache: "npm"
-
       - name: Setup Bun
-        if: matrix.runtime.kind == 'bun'
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: ${{ matrix.runtime.version }}
+          bun-version: latest
 
       - name: Setup Deno
-        if: matrix.runtime.kind == 'deno'
         uses: denoland/setup-deno@v2
         with:
-          deno-version: ${{ matrix.runtime.version }}
+          deno-version: vx.x.x
 
       - name: Install GStreamer dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -113,46 +98,72 @@ jobs:
           "GSTREAMER_1_0_ROOT_MSVC_X86_64=$gstRoot"       | Out-File -FilePath $env:GITHUB_ENV  -Append -Encoding utf8
           "$gstRoot\bin"                                  | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
-      - name: Install dependencies (Node.js)
-        if: matrix.runtime.kind == 'node'
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies (Node.js 20)
         run: npm ci
 
-      - name: Install dependencies (Bun)
-        if: matrix.runtime.kind == 'bun'
-        run: bun install --ignore-scripts
-
-      - name: Install dependencies (Deno)
-        if: matrix.runtime.kind == 'deno'
-        run: deno install --node-modules-dir=auto
-
-      - name: Build TypeScript bundle (Node.js)
-        if: matrix.runtime.kind == 'node'
+      - name: Build TypeScript bundle (Node.js 20)
         run: npm run build:ts
 
+      - name: Run unit tests (Node.js 20)
+        run: npm run test:unit
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Install dependencies (Node.js LTS)
+        run: npm ci
+
+      - name: Build TypeScript bundle (Node.js LTS)
+        run: npm run build:ts
+
+      - name: Lint code (Node.js LTS)
+        run: npm run lint
+
+      - name: Run unit tests (Node.js LTS)
+        run: npm run test:unit
+
+      - name: Setup Node.js latest
+        uses: actions/setup-node@v4
+        with:
+          node-version: node
+          cache: "npm"
+
+      - name: Install dependencies (Node.js latest)
+        run: npm ci
+
+      - name: Build TypeScript bundle (Node.js latest)
+        run: npm run build:ts
+
+      - name: Run unit tests (Node.js latest)
+        run: npm run test:unit
+
+      - name: Install dependencies (Bun)
+        run: bun install --ignore-scripts
+
       - name: Build native addon + TypeScript bundle (Bun)
-        if: matrix.runtime.kind == 'bun'
         run: |
           bun --bun x node-gyp rebuild
           bun --bun x rolldown -c rolldown.config.mjs
 
+      - name: Run unit tests (Bun)
+        run: bun x vitest --no-watch --no-file-parallelism --sequence.concurrent=false
+
+      - name: Install dependencies (Deno)
+        run: deno install --node-modules-dir=auto
+
       - name: Build native addon + TypeScript bundle (Deno)
-        if: matrix.runtime.kind == 'deno'
         run: |
           deno run -A --node-modules-dir=auto npm:node-gyp rebuild
           deno run -A --node-modules-dir=auto npm:rolldown -c rolldown.config.mjs
 
-      - name: Lint code
-        if: matrix.runtime.id == 'node-lts'
-        run: npm run lint
-
-      - name: Run unit tests (Node.js)
-        if: matrix.runtime.kind == 'node'
-        run: npm run test:unit
-
-      - name: Run unit tests (Bun)
-        if: matrix.runtime.kind == 'bun'
-        run: bun x vitest --no-watch --no-file-parallelism --sequence.concurrent=false
-
       - name: Run unit tests (Deno)
-        if: matrix.runtime.kind == 'deno'
         run: deno run -A --node-modules-dir=auto npm:vitest --no-watch --no-file-parallelism --sequence.concurrent=false
