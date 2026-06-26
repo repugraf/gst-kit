@@ -1067,9 +1067,11 @@ gst-kit/
 │       └── *.test.ts          # Comprehensive test suite
 ├── examples/                  # Usage examples
 │   ├── basic-pipeline.mjs     # Simple pipeline example
+│   ├── element-exists.mjs     # Checking element availability
 │   ├── appsink.mjs           # AppSink usage
 │   ├── appsrc.mjs            # AppSrc usage
 │   ├── appsrc-eos.mjs        # AppSrc with end-of-stream
+│   ├── pipeline-eos.mjs      # Pipeline-level end-of-stream
 │   ├── record-to-file.mjs    # Recording to file example
 │   ├── rtp-timestamp.mjs     # RTP handling
 │   ├── bus.mjs               # Message bus handling
