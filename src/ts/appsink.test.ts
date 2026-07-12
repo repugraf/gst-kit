@@ -107,4 +107,26 @@ describe("AppSink", () => {
     expect(samples).toHaveLength(frames);
     expect(samples[0].buffer).toBeDefined();
   });
+
+  it("should expose the buffer pts on pulled samples", async () => {
+    const pipeline = new Pipeline(
+      "videotestsrc num-buffers=5 is-live=false ! video/x-raw,framerate=30/1 " +
+        "! videoconvert ! appsink name=sink"
+    );
+    const sink = pipeline.getElementByName("sink");
+
+    if (sink?.type !== "app-sink-element") throw new Error("Expected app sink element");
+
+    await pipeline.play();
+
+    const first = await sink.getSample();
+    const second = await sink.getSample();
+
+    await pipeline.stop();
+
+    expect(typeof first?.pts).toBe("number");
+    expect(typeof second?.pts).toBe("number");
+    // videotestsrc timestamps buffers by running time: at 30fps consecutive PTS differ by 1/30s.
+    expect((second!.pts as number) - (first!.pts as number)).toBe(33_333_333);
+  });
 });

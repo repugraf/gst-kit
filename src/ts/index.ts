@@ -17,6 +17,11 @@ export type GStreamerPropertyValue =
 // Sample object returned for GST_VALUE_HOLDS_SAMPLE properties
 export type GStreamerSample = {
   buffer?: Buffer;
+
+  // Timing information from the sample's buffer (omitted when the buffer has no valid value)
+  pts?: number; // Presentation timestamp (nanoseconds)
+  dts?: number; // Decode timestamp (nanoseconds)
+
   flags?: number;
   caps?: {
     name?: string;

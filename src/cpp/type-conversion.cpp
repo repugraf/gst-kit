@@ -410,6 +410,16 @@ namespace TypeConversion {
       // Add flags from buffer
       GstBufferFlags flags = gst_buffer_get_flags(buf);
       result.Set("flags", Napi::Number::New(env, static_cast<uint32_t>(flags)));
+
+      // Add timing information from buffer (nanoseconds; omitted when invalid). This lets
+      // onSample/getSample consumers read a frame's PTS atomically with its buffer instead of
+      // adding a separate pad probe (which is not 1:1 with the sample under drops/reorder).
+      if (GST_BUFFER_PTS_IS_VALID(buf)) {
+        result.Set("pts", Napi::Number::New(env, static_cast<double>(GST_BUFFER_PTS(buf))));
+      }
+      if (GST_BUFFER_DTS_IS_VALID(buf)) {
+        result.Set("dts", Napi::Number::New(env, static_cast<double>(GST_BUFFER_DTS(buf))));
+      }
     }
 
     // Add caps from sample
