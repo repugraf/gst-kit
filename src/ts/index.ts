@@ -18,9 +18,13 @@ export type GStreamerPropertyValue =
 export type GStreamerSample = {
   buffer?: Buffer;
 
-  // Timing information from the sample's buffer (omitted when the buffer has no valid value)
+  // Timing and offset information from the sample's buffer (omitted when the buffer has no
+  // valid value for that field)
   pts?: number; // Presentation timestamp (nanoseconds)
   dts?: number; // Decode timestamp (nanoseconds)
+  duration?: number; // Buffer duration (nanoseconds)
+  offset?: number; // Media-specific start offset
+  offsetEnd?: number; // Media-specific end offset
 
   flags?: number;
   caps?: {
