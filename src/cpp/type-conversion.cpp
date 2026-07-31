@@ -420,15 +420,17 @@ namespace TypeConversion {
         result.Set("dts", Napi::Number::New(env, static_cast<double>(GST_BUFFER_DTS(buf))));
       }
       if (GST_BUFFER_DURATION_IS_VALID(buf)) {
-        result.Set("duration",
-                   Napi::Number::New(env, static_cast<double>(GST_BUFFER_DURATION(buf))));
+        result.Set(
+          "duration", Napi::Number::New(env, static_cast<double>(GST_BUFFER_DURATION(buf)))
+        );
       }
       if (GST_BUFFER_OFFSET_IS_VALID(buf)) {
         result.Set("offset", Napi::Number::New(env, static_cast<double>(GST_BUFFER_OFFSET(buf))));
       }
       if (GST_BUFFER_OFFSET_END_IS_VALID(buf)) {
-        result.Set("offsetEnd",
-                   Napi::Number::New(env, static_cast<double>(GST_BUFFER_OFFSET_END(buf))));
+        result.Set(
+          "offsetEnd", Napi::Number::New(env, static_cast<double>(GST_BUFFER_OFFSET_END(buf)))
+        );
       }
     }
 
