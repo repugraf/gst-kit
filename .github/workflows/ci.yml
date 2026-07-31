@@ -98,19 +98,19 @@ jobs:
           "GSTREAMER_1_0_ROOT_MSVC_X86_64=$gstRoot"       | Out-File -FilePath $env:GITHUB_ENV  -Append -Encoding utf8
           "$gstRoot\bin"                                  | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
-      - name: Install dependencies (Node.js 20)
+      - name: Install dependencies (Node.js 22)
         run: npm ci
 
-      - name: Build TypeScript bundle (Node.js 20)
+      - name: Build TypeScript bundle (Node.js 22)
         run: npm run build:ts
 
-      - name: Run unit tests (Node.js 20)
+      - name: Run unit tests (Node.js 22)
         run: npm run test:unit
 
       - name: Setup Node.js LTS
