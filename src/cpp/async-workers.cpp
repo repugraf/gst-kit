@@ -1,4 +1,5 @@
 #include "async-workers.hpp"
+#include "pipeline.hpp"
 #include "type-conversion.hpp"
 #include <gst/gst.h>
 
@@ -195,11 +196,12 @@ void PullSampleWorker::cleanup() {
 
 // StateChangeWorker implementation
 StateChangeWorker::StateChangeWorker(
-  const Napi::Env &env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
+  const Napi::Env &env, Pipeline *owner, GstPipeline *pipeline, GstState target_state,
+  GstClockTime timeout
 ) :
-    Napi::AsyncWorker(env), pipeline(pipeline), target_state(target_state), timeout(timeout),
-    state_change_result(GST_STATE_CHANGE_FAILURE), final_state(GST_STATE_VOID_PENDING),
-    deferred(env) {
+    Napi::AsyncWorker(env), owner(owner), pipeline(pipeline), target_state(target_state),
+    timeout(timeout), state_change_result(GST_STATE_CHANGE_FAILURE),
+    final_state(GST_STATE_VOID_PENDING), deferred(env), owner_notified(false) {
   // Increase reference count since we'll be using this in another thread
   gst_object_ref(pipeline);
 }
@@ -257,11 +259,17 @@ void StateChangeWorker::OnOK() {
   result.Set("finalState", Napi::Number::New(Env(), final_state));
   result.Set("targetState", Napi::Number::New(Env(), target_state));
 
+  // Notify the owner before resolving so any deferred dispose() teardown runs
+  // while this worker's own reference is still held — the release then sees the
+  // last reference drop and finalizes a truly-NULL pipeline.
+  notify_owner_finished();
+
   deferred.Resolve(result);
 }
 
 void StateChangeWorker::OnError(const Napi::Error &error) {
   Napi::HandleScope scope(Env());
+  notify_owner_finished();
   deferred.Reject(error.Value());
 }
 
@@ -270,4 +278,13 @@ void StateChangeWorker::cleanup() {
     gst_object_unref(pipeline);
     pipeline = nullptr;
   }
+}
+
+void StateChangeWorker::notify_owner_finished() {
+  // Runs on the JS thread (OnOK/OnError). Idempotent: OnOK and OnError are
+  // mutually exclusive, but guard anyway so the owner count can never be
+  // decremented twice for one worker.
+  if (owner_notified) return;
+  owner_notified = true;
+  owner->state_worker_finished();
 }

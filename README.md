@@ -810,6 +810,52 @@ setTimeout(async () => {
 }, 5000);
 ```
 
+### Releasing a Pipeline (dispose)
+
+Call `dispose()` when you are permanently done with a pipeline to free its native
+memory right away, instead of waiting for the garbage collector to finalize the
+wrapper.
+
+Why it matters: the native `GstPipeline` allocation (buffers, decoders, GStreamer
+internals) lives outside V8's heap and is invisible to its GC accounting. A
+pipeline you simply drop is only reclaimed when GC happens to collect the small JS
+wrapper — and with a flat JS heap, V8 feels little pressure to do so. A long
+running process that builds a pipeline per recording or transcode can watch RSS
+climb steadily while the JS heap stays flat. `dispose()` closes that gap: it
+drives the pipeline to NULL if it is not already there and drops the native
+reference synchronously, so the memory is released as soon as the last reference
+goes away rather than at some later GC.
+
+```javascript
+import { Pipeline } from "gst-kit";
+
+const pipeline = new Pipeline("videotestsrc ! theoraenc ! oggmux ! filesink location=out.ogv");
+await pipeline.play();
+
+// ... record, then finish cleanly ...
+pipeline.endOfStream();
+while (true) {
+  const msg = await pipeline.busPop(1000);
+  if (msg?.type === "eos") break;
+}
+await pipeline.stop();
+
+// Release the native pipeline now rather than at some later GC.
+pipeline.dispose();
+
+// dispose() is terminal and idempotent. Any method call afterward throws
+// "Pipeline used after dispose()", and a second dispose() is a harmless no-op.
+```
+
+**Key points:**
+
+- **Stop first (recommended)**: prefer `stop()` (or `endOfStream()` + wait for EOS, then `stop()`) before `dispose()`. If the pipeline has not reached the NULL state, `dispose()` drives it there synchronously before releasing it — GStreamer cannot cleanly free a non-NULL pipeline. That transition is normally instant, but on a not-fully-stopped pipeline it runs on the calling thread and is bounded by a 5s wait, so stopping first keeps `dispose()` cheap and non-blocking.
+- **Terminal**: call it once, when the pipeline will not be used again.
+- **Not a graceful stop**: `dispose()` does the hard release, not a flush.
+- **Release elements first**: any element obtained via `getElementByName()`, and any pad-probe or `onSample()` subscription on it, must be released/unsubscribed before `dispose()`. Elements hold their own reference and are not invalidated by disposing the pipeline.
+- **Idempotent**: calling `dispose()` again does nothing.
+- **Use-after-dispose is loud**: subsequent method calls throw rather than touching freed memory.
+
 ### Message Bus Handling
 
 ```javascript
@@ -916,6 +962,9 @@ class Pipeline {
 
   // Message handling
   busPop(timeoutMs?: number): Promise<GstMessage | null>;
+
+  // Lifecycle — release the native pipeline and free its memory immediately
+  dispose(): void;
 }
 ```
 
@@ -1072,6 +1121,7 @@ gst-kit/
 │   ├── appsrc.mjs            # AppSrc usage
 │   ├── appsrc-eos.mjs        # AppSrc with end-of-stream
 │   ├── pipeline-eos.mjs      # Pipeline-level end-of-stream
+│   ├── dispose.mjs           # Releasing a pipeline's native memory
 │   ├── record-to-file.mjs    # Recording to file example
 │   ├── rtp-timestamp.mjs     # RTP handling
 │   ├── bus.mjs               # Message bus handling
