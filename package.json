@@ -49,24 +49,24 @@
   "homepage": "https://github.com/repugraf/gst-kit",
   "description": "Node.js binding for GStreamer, providing high-level APIs for multimedia streaming and processing",
   "dependencies": {
-    "node-addon-api": "8.9.0",
-    "node-gyp": "13.0.1"
+    "node-addon-api": "8.9.2",
+    "node-gyp": "13.0.2"
   },
   "devDependencies": {
-    "@types/node": "26.1.2",
-    "oxfmt": "0.61.0",
-    "oxlint": "1.76.0",
-    "rolldown": "1.2.1",
-    "rolldown-plugin-dts": "0.28.0",
+    "@types/node": "26.5.1",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
+    "rolldown": "1.2.8",
+    "rolldown-plugin-dts": "0.28.5",
     "typescript": "7.0.2",
-    "vitest": "4.1.10"
+    "vitest": "5.0.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "overrides": {
     "vitest": {
-      "vite": "8.2.0"
+      "vite": "8.3.0"
     },
     "tar": "7.5.22"
   }
