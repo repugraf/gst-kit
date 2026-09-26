@@ -155,6 +155,7 @@ interface Pipeline {
   busPop(timeoutMs?: number): Promise<GstMessage | null>;
   seek(positionSeconds: number): boolean;
   endOfStream(): boolean;
+  dispose(): void;
 }
 
 interface PipelineConstructor {

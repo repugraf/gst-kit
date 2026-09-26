@@ -53,11 +53,14 @@ private:
   Napi::Promise::Deferred deferred;
 };
 
+class Pipeline;
+
 // AsyncWorker for pipeline state changes with timeout
 class StateChangeWorker : public Napi::AsyncWorker {
 public:
   StateChangeWorker(
-    const Napi::Env &env, GstPipeline *pipeline, GstState target_state, GstClockTime timeout
+    const Napi::Env &env, Pipeline *owner, GstPipeline *pipeline, GstState target_state,
+    GstClockTime timeout
   );
   ~StateChangeWorker();
 
@@ -69,11 +72,14 @@ public:
 
 private:
   void cleanup();
+  void notify_owner_finished();
 
+  Pipeline *owner;
   GstPipeline *pipeline;
   GstState target_state;
   GstClockTime timeout;
   GstStateChangeReturn state_change_result;
   GstState final_state;
   Napi::Promise::Deferred deferred;
+  bool owner_notified;
 };
